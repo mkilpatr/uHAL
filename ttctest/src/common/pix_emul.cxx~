@@ -1,0 +1,126 @@
+#include "uhal/uhal.hpp"
+#include "uhal/tests/tools.hpp"
+#include <boost/filesystem.hpp>
+#include "uhal/HwInterface.hpp"
+
+#include <vector>
+#include <algorithm>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+#include <typeinfo>
+#include <list>
+
+int Test_Pixel_Emul( int answer ){
+	
+	std::cout << "What kind of Test?" << std::endl;
+	std::cout << "0. Set the number of ROCS to 8" << std::endl;
+	std::cout << "1. Every ROC has one hit" << std::endl;
+	std::cout << "2. Scan through every pixel with one hit" << std::endl;
+	std::cout << "3. Increasing charge in each ROC" << std::endl;
+
+	std::cin >> answer;
+	return answer;
+}
+
+
+int main() {
+
+  using namespace uhal;
+  using namespace std;
+  int useroption = 0;
+  
+  ConnectionManager manager ("file://test/dummy_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
+ 
+  useroption = Test_Pixel_Emul( useroption );
+ 
+  if( useroption == 0 ){  
+  	hw.getNode("ROC_Number").write(0x11001188);
+
+  	ValWord < uint32_t > mem = hw.getNode ( "ROC_Number" ).read();
+  	hw.dispatch();
+  	std::cout << "ROC_Number = " << std::hex << mem.value() << std::endl;
+  }
+
+  string ROCSA[ 8 ] = {"CHA_ROC0", "CHA_ROC1", "CHA_ROC2", "CHA_ROC3", "CHA_ROC4", "CHA_ROC5", "CHA_ROC6", "CHA_ROC7"};
+  string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
+  
+  if( useroption == 1){
+
+	hw.getNode("CHA_Hits").write(0x11111111);
+
+  	ValWord < uint32_t > mem = hw.getNode ( "CHA_Hits" ).read();
+  	hw.dispatch();
+  	std::cout << "CHA_Hits = " << std::hex << mem.value() << std::endl;
+	
+  	hw.getNode("CHB_Hits").write(0x11111111);
+
+  	mem = hw.getNode ( "CHB_Hits" ).read();
+  	hw.dispatch();
+  	std::cout << "CHB_Hits = " << std::hex << mem.value() << std::endl;
+  }
+
+  if( useroption == 2 ){
+	int j,k,i;
+	int Max_Column = 10;
+	int Max_Row = 10;
+	int Hit_infoA_Start = 0x00010101;
+        int Hit_infoB_Start = 0x00010101;
+	int Hit_infoA_dummy = Hit_infoA_Start;
+	int Hit_infoB_dummy = Hit_infoB_Start;
+
+        ValWord < uint32_t > mem;
+
+  	for( j = 0; j < Max_Row; j++){
+		int Hit_infoA = Hit_infoA_dummy + 0x00010000;
+                int Hit_infoB = Hit_infoB_dummy + 0x00010000;
+		
+		for( k = 0; k < Max_Column; k++){
+			Hit_infoA = Hit_infoA + 0x00000100;
+                        Hit_infoB = Hit_infoB + 0x00000100;
+			
+			for( i = 0; i < 8; i++){
+				hw.getNode( ROCSA[i] ).write(Hit_infoA);
+                		mem = hw.getNode ( ROCSA[i] ).read();
+                		hw.dispatch();
+                		std::cout << ROCSA[i] << " = " << std::hex << mem.value() << std::endl;
+
+                		hw.getNode( ROCSB[i] ).write(Hit_infoB);
+                		mem = hw.getNode ( ROCSB[i] ).read();
+                		hw.dispatch();
+                		std::cout << ROCSB[i] << " = " << std::hex << mem.value() << std::endl;
+			}	
+			
+			system("/home/MrPixel/Desktop/amc13_v1_1_0/AMC13Environment.bash");	
+		}
+		Hit_infoA_dummy = Hit_infoA_Start + (0x00010000 * (j + 1));
+		Hit_infoB_dummy = Hit_infoB_Start + (0x00010000 * (j + 1));
+	}
+  }
+
+  if( useroption == 3 ){
+  	int i;
+	int Hit_infoA = 0x00010100;
+	int Hit_infoB = 0x00010100;
+	ValWord < uint32_t > mem;
+
+	for( i = 0; i < 8; i++){
+		hw.getNode( ROCSA[i] ).write(Hit_infoA);
+                mem = hw.getNode ( ROCSA[i] ).read();
+                hw.dispatch();
+                std::cout << ROCSA[i] << " = " << std::hex << mem.value() << std::endl;
+
+		hw.getNode( ROCSB[i] ).write(Hit_infoB);
+                mem = hw.getNode ( ROCSB[i] ).read();
+                hw.dispatch();
+                std::cout << ROCSB[i] << " = " << std::hex << mem.value() << std::endl;
+		
+		Hit_infoA++;
+		Hit_infoB++;
+	}
+	system("/home/MrPixel/Desktop/amc13_v1_1_0/AMC13Environment.bash");
+  }
+
+return 0;
+}

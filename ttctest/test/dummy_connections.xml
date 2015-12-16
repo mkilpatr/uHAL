@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connections>
+
+  <!-- DUMMY UDP -->
+  <connection id="GLIB.crate.slot_11" uri="ipbusudp-2.0://192.168.1.171:50001" address_table="file://~/build/ttctest/test/addr_table.xml" />
+  
+</connections>
+
