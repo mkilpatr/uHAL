@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connections>
+
+  <!-- DUMMY UDP -->
+  <connection id="GLIB.crate.slot_1" uri="chtcp-2.0://localhost:10203?target=192.168.1.161:50001" address_table="file://addr_table.xml" />
+  <connection id="GLIB.crate.slot_11" uri="chtcp-2.0://localhost:10203?target=192.168.1.171:50001" address_table="file://addr_table.xml" />
+</connections>
+
