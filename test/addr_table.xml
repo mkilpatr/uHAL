@@ -1,0 +1,37 @@
+<node id="Example slaves file">
+	<node id="id" address="0x0" description="ID register" fwinfo="endpoint;width=0"/>
+	<node id="csr" address="0x2" description="ctrl/stat register" fwinfo="endpoint;width=1">
+		<node id="ctrl" address="0x0"/>
+		<node id="stat" address="0x1"/>
+	</node>
+	<node id="xpoint" address="0x4" size="0x4" fwinfo="endpoint;width=2"/>
+	<node id="L1A_count" address="0x40040000"/>
+	<node id="Orbit_count" address="0x40040001"/>
+	<node id="Bunch_count" address="0x40040002"/>
+	<node id="pix_emul_0" address="0x80000010"/>
+	<node id="pix_emul_1" address="0x80000011"/>
+	<node id="ROC_Number" address="0x80000012"/>
+	<node id="pix_emul_3" address="0x80000013"/>
+        <node id="pix_emul_4" address="0x80000014"/>
+        <node id="CHA_ROC0" address="0x80000015"/>
+        <node id="CHB_ROC0" address="0x80000016"/>
+	<node id="CHA_ROC1" address="0x80000017"/>
+        <node id="CHB_ROC1" address="0x80000018"/>
+        <node id="CHA_ROC2" address="0x80000019"/>
+        <node id="CHB_ROC2" address="0x8000001a"/>
+	<node id="CHA_ROC3" address="0x8000001b"/>
+        <node id="CHB_ROC3" address="0x8000001c"/>
+        <node id="CHA_ROC4" address="0x8000001d"/>
+        <node id="CHB_ROC4" address="0x8000001e"/>
+	<node id="CHA_ROC5" address="0x8000001f"/>
+	<node id="CHB_ROC5" address="0x80000020"/>
+	<node id="CHA_ROC6" address="0x80000021"/>
+	<node id="CHB_ROC6" address="0x80000022"/>
+	<node id="CHA_ROC7" address="0x80000023"/>
+	<node id="CHB_ROC7" address="0x80000024"/>
+	<node id="CHA_Hits" address="0x80000025"/>
+	<node id="CHB_Hits" address="0x80000026"/>
+	<node id="TBM_Reset" address="0x80000027"/>
+	<node id="PKAM_Reset" address="0x80000028"/>
+	<node id="ROC_CLK" address="0x80000029"/>
+</node>
