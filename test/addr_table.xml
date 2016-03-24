@@ -5,9 +5,27 @@
 		<node id="stat" address="0x1"/>
 	</node>
 	<node id="xpoint" address="0x4" size="0x4" fwinfo="endpoint;width=2"/>
+	<node id="Fitel_ctrl_fifo_tx" address="0x40100000"/>
+	<node id="Fitel_ctrl_fifo_rx" address="0x40100001"/>
 	<node id="L1A_count" address="0x40040000"/>
 	<node id="Orbit_count" address="0x40040001"/>
 	<node id="Bunch_count" address="0x40040002"/>
+	<node id="Read_00" address="0x80000000"/>
+	<node id="Read_01" address="0x80000001"/>
+	<node id="Read_02" address="0x80000002"/>
+	<node id="Read_03" address="0x80000003"/>
+	<node id="Read_04" address="0x80000004"/>
+	<node id="Read_05" address="0x80000005"/>
+	<node id="Read_06" address="0x80000006"/>
+	<node id="Read_07" address="0x80000007"/>
+	<node id="Read_08" address="0x80000008"/>
+	<node id="Read_09" address="0x80000009"/>
+	<node id="Read_10" address="0x8000000a"/>
+	<node id="Read_11" address="0x8000000b"/>
+	<node id="Read_12" address="0x8000000c"/>
+	<node id="Read_13" address="0x8000000d"/>
+	<node id="Read_14" address="0x8000000e"/>
+	<node id="Read_15" address="0x8000000f"/>
 	<node id="pix_emul_0" address="0x80000010"/>
 	<node id="pix_emul_1" address="0x80000011"/>
 	<node id="ROC_Number" address="0x80000012"/>
@@ -31,7 +49,7 @@
 	<node id="CHB_ROC7" address="0x80000024"/>
 	<node id="CHA_Hits" address="0x80000025"/>
 	<node id="CHB_Hits" address="0x80000026"/>
-	<node id="TBM_Reset" address="0x80000027"/>
+	<node id="User_Reset" address="0x80000027"/>
 	<node id="PKAM_Reset" address="0x80000028"/>
 	<node id="ROC_CLK" address="0x80000029"/>
 </node>

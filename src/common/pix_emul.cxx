@@ -25,37 +25,37 @@ int main( int argc, char* argv[] ) {
   string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_1" );   //this is to glib with the debug card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the optical card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_1" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
  
   if( argc == 1 ) {
   	std::cout << "What kind of Test?" << std::endl;
-    std::cout << "1. Set the number of ROCS" << std::endl;
+    	std::cout << "1. Set the number of ROCS" << std::endl;
   	std::cout << "	How Many ROCS to you want?" << std::endl;
-    std::cout << "		Format: 0x(dataB)(dataA)(MatrixB)(MatrixA)(HitROCB)(HitROCA)(ROCSB)(ROCSA)" << std::endl;
-    std::cout << "2. How many hits in each ROC" << std::endl;
+    	std::cout << "		Format: 0x(dataB)(dataA)(MatrixB)(MatrixA)(HitROCB)(HitROCA)(ROCSB)(ROCSA)" << std::endl;
+    	std::cout << "2. How many hits in each ROC" << std::endl;
   	std::cout << "	How many hits do you want in CHA?" << std::endl;
-    std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+    	std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
   	std::cout << "	How many hits do you want in CHB?" << std::endl;
-    std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+    	std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
   	std::cout << "3. Scan through pixels" << std::endl;
   	std::cout << "	Number of Pixel Columns? (6 bits)" << std::endl;
-    std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
+    	std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
   	std::cout << "	Where do you want to start in CHA" << std::endl;
-    std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
+    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
   	std::cout << "	Where do you want to start in CHB" << std::endl;
-    std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
+    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
   	std::cout << "	What kind of AMC13 command do you want?" << std::endl;
   	std::cout << "		1: Able to enter commands, Else: quits out of AMC13 every time" << std::endl;
   	std::cout << "4. Increasing charge in each ROC" << std::endl;
-    std::cout << "	How much do you want to increase the charge by?" << std::endl;
+    	std::cout << "	How much do you want to increase the charge by?" << std::endl;
   	std::cout << "5. Scan through pixels in a specific ROC in a specific Channel" << std::endl;
   	std::cout << "	Number of Pixel Columns? (6 bits)" << std::endl;
-    std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
-    std::cout << "	Where do you want to start in CHA" << std::endl;
-    std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
-    std::cout << "	Where do you want to start in CHB" << std::endl;
-    std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
+    	std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
+    	std::cout << "	Where do you want to start in CHA" << std::endl;
+    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
+    	std::cout << "	Where do you want to start in CHB" << std::endl;
+    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
   	std::cout << "	Which ROC in CHA do you want to scan through?" << std::endl;
   	std::cout << "	Which ROC in CHB do you want to scan through?" << std::endl;
   	std::cout << "6. Do You want a PKAM Reset?" << std::endl;
@@ -64,10 +64,11 @@ int main( int argc, char* argv[] ) {
   	std::cout << "7. Do You want to set the ROC Clock?" << std::endl;
   	std::cout << "  What value do you want to set it to? " << std::endl;
   	std::cout << "  A vlue of 0xA0 will set the latency to 160" << std::endl;
+	std::cout << "8. Check the Firmware date of each GLIB" << std::endl;
 	return 0;
   }
 
-  if( atoi(argv[1]) >= 8 ){
+  if( atoi(argv[1]) >= 10 ){
     std::cout << "NOT A VALID ENTRY" << std::endl;
 	return 0;
   }
@@ -118,6 +119,23 @@ int main( int argc, char* argv[] ) {
     	std::cout << "CHB_Hits = " << std::hex << mem2.value() << std::endl;
     }	
   }
+
+  else if( atoi(argv[1] == 9){
+	int CHA_Event = strtol(argv[2], NULL, 16);
+	int CHB_Event = strtol(argv[3], NULL, 16);
+
+	int MUX = 0;
+	
+	int Buffer = 0x80000000;
+	do{
+		if( CHA_Event && Buffer == 1){
+			
+		}
+	}
+	while( Buffer != 0x1)
+
+  }
+
 
   else if( atoi(argv[1]) == 3 ){
   	int j,k,i;
@@ -273,11 +291,7 @@ int main( int argc, char* argv[] ) {
 
   }
 
-  else{
-    return 0;
-  }
-
-  if( atoi(argv[1]) == 6 ){
+  else if( atoi(argv[1]) == 6 ){
     if(argc == 3){
       PKAM = strtol(argv[2], NULL, 16);
 
@@ -297,24 +311,35 @@ int main( int argc, char* argv[] ) {
     else {return 0;}
   }
 
-if( atoi(argv[1]) == 7 ){
-  if(argc == 3){
-    ROC_Clk = strtol(argv[2], NULL, 16);
+  else if( atoi(argv[1]) == 7 ){
+  	if(argc == 3){
+  	  ROC_Clk = strtol(argv[2], NULL, 16);
 
-    hw.getNode("ROC_CLK").write( ROC_Clk );
-    ValWord < uint32_t > mem = hw.getNode ( "ROC_CLK" ).read();
-    hw.dispatch();
-    std::cout << "ROC Clock = " << std::hex << mem.value() << std::endl;
+  	  hw.getNode("ROC_CLK").write( ROC_Clk );
+  	  ValWord < uint32_t > mem = hw.getNode ( "ROC_CLK" ).read();
+  	  hw.dispatch();
+  	  std::cout << "ROC Clock = " << std::hex << mem.value() << std::endl;
 
-    hw2.getNode("ROC_CLK").write( ROC_Clk );
-    ValWord < uint32_t > mem2 = hw2.getNode ( "ROC_CLK" ).read();
-    hw2.dispatch();
-    std::cout << "ROC Clock = " << std::hex << mem2.value() << std::endl;
+  	  hw2.getNode("ROC_CLK").write( ROC_Clk );
+  	  ValWord < uint32_t > mem2 = hw2.getNode ( "ROC_CLK" ).read();
+  	  hw2.dispatch();
+  	  std::cout << "ROC Clock = " << std::hex << mem2.value() << std::endl;
 
-    return 0;
+  	  return 0;
+  	}
+  	else {return 0;}
   }
-  else {return 0;}
-  }
+
+  else if( atoi(argv[1]) == 8){
+	
+	ValWord < uint32_t > mem = hw.getNode ( "Firmware_date" ).read();
+	hw.dispatch();
+	std::cout << "Firmware Date is " << std::hex << mem.value() << std::endl;
+
+	ValWord < uint32_t > mem2 = hw2.getNode ( "Firmware_date" ).read();
+        hw2.dispatch();
+        std::cout << "Firmware Date2 is " << std::hex << mem2.value() << std::endl;
+}
 
 return 0;
 }
