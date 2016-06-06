@@ -51,21 +51,20 @@ int main( int argc, char* argv[] ) {
   	std::cout << "		1: Able to enter commands, Else: quits out of AMC13 every time" << std::endl;
   	std::cout << "4. Increasing charge in each ROC" << std::endl;
     	std::cout << "	How much do you want to increase the charge by?" << std::endl;
-  	std::cout << "5. Scan through pixels in a specific ROC in a specific Channel" << std::endl;
-  	std::cout << "	Number of Pixel Columns? (6 bits)" << std::endl;
-    	std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
-    	std::cout << "	Where do you want to start in CHA" << std::endl;
-    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
-    	std::cout << "	Where do you want to start in CHB" << std::endl;
-    	std::cout << "		Format: 0x(24 downto 16 Row)(13 downto 8 Column)(7 downto 0 Charge)" << std::endl;
-  	std::cout << "	Which ROC in CHA do you want to scan through?" << std::endl;
-  	std::cout << "	Which ROC in CHB do you want to scan through?" << std::endl;
-  	std::cout << "6. Do You want a PKAM Reset?" << std::endl;
-  	std::cout << "  A value of 0x11400 will enable a reset and length 20" << std::endl;
-  	std::cout << "  A value of 0x01400 will disable" << std::endl;
+  	std::cout << "5. Loop through adc values" << std::endl;
+  	std::cout << "	Which adc value do you want to start with? (8 bits)" << std::endl;
+    	std::cout << "	Which adc value do you want to end with? (8 bits) (Enter 0 to loop over all values)" << std::endl;
+        std::cout << "  Increment adc value by how much?" << std::endl;  
+        std::cout << "  How many hits do you want in CHA?" << std::endl;
+        std::cout << "          Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+        std::cout << "  How many hits do you want in CHB?" << std::endl;
+        std::cout << "          Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl; 
+	std::cout << "6. Do You want a PKAM Reset?" << std::endl;
+  	std::cout << "  A value of 0x114000 will enable a reset and length 20" << std::endl;
+  	std::cout << "  A value of 0x014000 will disable" << std::endl;
   	std::cout << "7. Do You want to set the ROC Clock?" << std::endl;
   	std::cout << "  What value do you want to set it to? " << std::endl;
-  	std::cout << "  A vlue of 0xA0 will set the latency to 160" << std::endl;
+  	std::cout << "  A vlue of 0xA0000000 will set the latency to 160" << std::endl;
 	std::cout << "8. Check the Firmware date of each GLIB" << std::endl;
 	std::cout << "9. Does somethin?" << std::endl;
 	std::cout << "10. IPBus reset" << std::endl;
@@ -260,60 +259,87 @@ int main( int argc, char* argv[] ) {
   }
 
   else if( atoi(argv[1]) == 5 ){
-    int j,k;
-    int Max_Column = 0;
-    int Max_Row = 0;
-    int Hit_infoA_Start = 0;
-    int Hit_infoB_Start = 0;
-    int ROC_A = 0;
-    int ROC_B = 0;
-    ValWord < uint32_t > mem,mem2;
+  if(argc == 7 ) {  
+   Hits_CHA = strtol(argv[5], NULL, 16);
+   Hits_CHB = strtol(argv[6], NULL, 16);
+   ValWord < uint32_t > mem4;
 
-    Max_Column = strtol(argv[2], NULL, 16);
-    Max_Row = strtol(argv[3], NULL, 16);
-    Hit_infoA_Start = strtol(argv[4], NULL, 16);
-    Hit_infoB_Start = strtol(argv[5], NULL, 16);
-    ROC_A = strtol(argv[6], NULL, 16);
-    ROC_B = strtol(argv[7], NULL, 16);
+   hw.getNode("CHA_Hits").write( Hits_CHA );
+   ValWord < uint32_t > mem3 = hw.getNode( "CHA_Hits" ).read();
+   hw.dispatch();
+   std::cout << "CHA_HITS = " << std::hex << mem3.value() << std::endl;
 
-    int Hit_infoA_dummy = Hit_infoA_Start;
-    int Hit_infoB_dummy = Hit_infoB_Start;
+   hw.getNode("CHB_Hits").write( Hits_CHB );
+   mem3 = hw.getNode ( "CHB_Hits" ).read();
+   hw.dispatch();
+   std::cout << "CHB_Hits = " << std::hex << mem3.value() << std::endl;
 
-  	for( j = 0; j < Max_Row; j++){
-      int Hit_infoA = Hit_infoA_dummy;
-      int Hit_infoB = Hit_infoB_dummy;
+   hw2.getNode("CHA_Hits").write( Hits_CHA );
+   mem4 = hw2.getNode ( "CHA_Hits" ).read();
+   hw2.dispatch();
+   std::cout << "CHA_Hits = " << std::hex << mem4.value() << std::endl;
 
-      for( k = 0; k < Max_Column; k++){
+   hw2.getNode("CHB_Hits").write( Hits_CHB );
+   mem4 = hw2.getNode ( "CHB_Hits" ).read();
+   hw2.dispatch();
+   std::cout << "CHB_Hits = " << std::hex << mem4.value() << std::endl;
 
-        hw.getNode( ROCSA[ ROC_A ] ).write(Hit_infoA);
-        mem = hw.getNode ( ROCSA[ ROC_A ] ).read();
-        hw.dispatch();
-        std::cout << ROCSA[ ROC_A ] << " = " << std::hex << mem.value() << std::endl;
+   int i,j;
+   int min_adc = 0;
+   int max_adc = 0;
+   ValWord < uint32_t > mem,mem2; 
 
-        hw.getNode( ROCSB[ ROC_B ] ).write(Hit_infoB);
-        mem = hw.getNode ( ROCSB[ROC_B ] ).read();
-        hw.dispatch();
-        std::cout << ROCSB[ ROC_B ] << " = " << std::hex << mem.value() << std::endl;
+   min_adc = strtol(argv[2], NULL, 16);
+   if (min_adc < 0) {
+     min_adc = 0;
+   }
+   else if (min_adc > 255) {
+     min_adc = 255;
+   }
+   max_adc = strtol(argv[3], NULL, 16);
+   if (max_adc < min_adc && max_adc != 0) {
+     max_adc = min_adc;
+     std::cout << "Max is less than min." << std::endl;
+     }
+   else if (max_adc > 255 || max_adc == 0) {
+     max_adc = 255;
+     }
+   
+   int hit_info = min_adc;
 
-	hw2.getNode( ROCSA[ ROC_A ] ).write(Hit_infoA);
-        mem2 = hw2.getNode ( ROCSA[ ROC_A ] ).read();
-        hw2.dispatch();
-        std::cout << ROCSA[ ROC_A ] << " = " << std::hex << mem2.value() << std::endl;
+   int increment = strtol(argv[4],NULL,0);
 
-        hw2.getNode( ROCSB[ ROC_B ] ).write(Hit_infoB);
-        mem2 = hw2.getNode ( ROCSB[ROC_B ] ).read();
-        hw2.dispatch();
-        std::cout << ROCSB[ ROC_B ] << " = " << std::hex << mem2.value() << std::endl;
+   for (i=min_adc;i<max_adc;i=i+increment){
+     for (j=0;j<8;j++){
+       hw.getNode( ROCSA[j] ).write(hit_info);
+       mem = hw.getNode ( ROCSA[j] ).read();
+       hw.dispatch();
+       std::cout << ROCSA[j] << " = " << std::hex << mem.value() << std::endl;
 
-        Hit_infoA = Hit_infoA + 0x00000100;
-        Hit_infoB = Hit_infoB + 0x00000100;
-        system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");
-      }
-      Hit_infoA_dummy = Hit_infoA_Start + (0x00010000 * (j + 1));
-      Hit_infoB_dummy = Hit_infoB_Start + (0x00010000 * (j + 1));
-    }
+       hw.getNode( ROCSB[j] ).write(hit_info);
+       mem = hw.getNode ( ROCSB[j] ).read();
+       hw.dispatch();
+       std::cout << ROCSB[j] << " = " << std::hex << mem.value() << std::endl;
 
+       hw2.getNode( ROCSA[j] ).write(hit_info);
+       mem2 = hw2.getNode ( ROCSA[j] ).read();
+       hw2.dispatch();
+       std::cout << ROCSA[j] << " = " << std::hex << mem2.value() << std::endl;
+
+       hw2.getNode ( ROCSB[j] ).write(hit_info);
+       mem2 = hw2.getNode ( ROCSB[j] ).read();
+       hw2.dispatch();
+       std::cout << ROCSB[j] << " = " << std::hex << mem2.value() << std::endl;        
+     }   
+    
+    hit_info = hit_info + (0x00000001*increment);
+    std::cout << "Right here" << std::endl;
+
+    system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");   
+
+   }
   }
+ }
 
   else if( atoi(argv[1]) == 6 ){
     if(argc == 3){
