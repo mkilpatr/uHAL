@@ -18,7 +18,7 @@ int main( int argc, char* argv[] ) {
 	using namespace std;
 	
 	ConnectionManager manager ("file://test/dummy_connections.xml");
-	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_1" );   //this is to glib with the optical card
+	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
 	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
 
 	if( argc == 1 ) {

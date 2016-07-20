@@ -27,7 +27,7 @@ int main( int argc, char* argv[] ) {
   string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_1" );   //this is to glib with the optical card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
   HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
  
   if( argc == 1 ) {
@@ -209,10 +209,10 @@ int main( int argc, char* argv[] ) {
   			Hit_infoB = Hit_infoB + 0x00000100;	
 
   			if(strtol(argv[6], NULL, 16) == 1){
-  				system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul_command.bash");	
+  				system("/home/fectest/FEDtester/MrPixel/Desktop/amc13/AMC13Pixel_Emul_command.bash");	
   			}
   			else{
-  				system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");
+  				system("/home/fectest/FEDtester/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");
   			}
   		}
 
@@ -254,7 +254,7 @@ int main( int argc, char* argv[] ) {
   		Hit_infoA = Hit_infoA + Hit_Charge_Increase;
   		Hit_infoB = Hit_infoB + Hit_Charge_Increase;
   	}
-  	system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");
+  	system("/home/fectest/FEDtester/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");
     return 0;
   }
 
@@ -335,7 +335,7 @@ int main( int argc, char* argv[] ) {
     hit_info = hit_info + (0x00000001*increment);
     std::cout << "Right here" << std::endl;
 
-    system("/home/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");   
+    system("/home/fectest/FEDtester/MrPixel/Desktop/amc13/AMC13Pixel_Emul.bash");   
 
    }
   }

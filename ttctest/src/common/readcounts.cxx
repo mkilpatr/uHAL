@@ -35,7 +35,7 @@ int main() {
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
   HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_1" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
 
   ValWord< uint32_t > mem = hw.getNode ( "L1A_count" ).read();
   hw.dispatch();
