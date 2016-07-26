@@ -33,13 +33,15 @@ int main() {
   //h1.GetXaxis().SetTitle("Number of Bunches");
   //h1.GetYaxis().SetTitle("Count");
 
-  ConnectionManager manager ("file://test/dummy_connections.xml");
+  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
   HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_1" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
 
-  ValWord< uint32_t > mem = hw.getNode ( "L1A_count" ).read();
+  
+  hw.getNode( "CHA_ROC2_0" ).write(255);
+  ValWord< uint32_t > mem = hw.getNode ( "CHA_ROC2_0" ).read();
   hw.dispatch();
-  std::cout << "L1A_count = " << mem.value() << std::endl;
+  std::cout << "CHA_ROC2_1 = " << std::hex << mem.value() << std::endl;
 
   ValWord< uint32_t > mem2 = hw2.getNode ( "L1A_count" ).read();
   hw2.dispatch();
@@ -53,8 +55,21 @@ int main() {
   hw.dispatch();
   std::cout << "Orbit_count = " << mem.value() << std::endl;
 
-  string Read[ 16] = {"Read_00", "Read_01", "Read_02", "Read_03", "Read_04", "Read_05", "Read_06", "Read_07", "Read_08", "Read_09", "Read_10", "Read_11", "Read_12", "Read_13", "Read_14", "Read_15" };
-  int i = 0;
+  mem = hw2.getNode ( "user_iphc_ascii_01" ).read();
+  hw2.dispatch();
+  std::cout << "user_iphc_ascii_01 = " << std::hex << mem.value() << std::endl;
+
+  mem = hw2.getNode ( "user_iphc_ascii_02" ).read();
+  hw2.dispatch();
+  std::cout << "user_iphc_ascii_02 = " << mem.value() << std::endl;
+ 
+  mem = hw2.getNode ( "user_rice_ascii_01" ).read();
+  hw2.dispatch();
+  std::cout << "user_rice_ascii_01 = " << mem.value() << std::endl;
+
+  mem = hw2.getNode ( "user_rice_ascii_02" ).read();
+  hw2.dispatch();
+  std::cout << "user_rice_ascii_02 = " << mem.value() << std::endl;
 
   /*for( i = 0; i < 16; i++){
   	mem = hw.getNode ( Read[i] ).read();

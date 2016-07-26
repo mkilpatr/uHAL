@@ -55,7 +55,7 @@ INCLUDES = $(wildcard include/*.hpp)
 INCLUDE_PATH =  \
                 -Iinclude  \
                 -I${CACTUS_ROOT}/include \
-		-I/usr/include/root
+#		-I/usr/include/root
 
 
 # Set your library name here
@@ -72,7 +72,7 @@ EXECUTABLES = $(patsubst src/common/%.cxx,bin/%,${EXECUTABLE_SOURCES})
 LIBRARY_PATH =  \
                 -L${CACTUS_ROOT}/lib \
                 -L${MY_PROJECT_ROOT}/lib \
-		-L/usr/lib64/root 
+#		-L/usr/lib64/root 
 
 
 LIBRARIES =     \
@@ -87,7 +87,7 @@ LIBRARIES =     \
                 -lcactus_uhal_log \
                 -lcactus_uhal_grammars \
                 -lcactus_uhal_uhal \
-		-lHist \
+#		-lHist \
 		-lCore \
 		-lGpad \
 		-lGui \
@@ -108,7 +108,14 @@ _cleanall:
 	rm -rf obj
 	rm -rf lib
 	rm Bunch.root
-  
+	(cd System; make clean)
+	(cd Utils; make clean)
+	(cd HWInterface; make clean)
+	(cd AMC13; make clean)
+	(cd HWDescription; make clean)
+	(cd src; make clean)
+	(rm -f lib/* bin/*)  
+
 all: _all
 build: _all
 buildall: _all
