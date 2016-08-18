@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="param_table.xsl"?>
+<!-- G. Auzinger, georg.auzinger@SPAMNOTcern.ch, 30.11.2015 -->
+<node id="PixFED">
+	<node id="xpoint" address="0x4" size="0x4" fwinfo="endpoint;width=2"/>
+	<node id="Fitel_ctrl_fifo_tx" address="0x40100000"/>
+	<node id="Fitel_ctrl_fifo_rx" address="0x40100001"/>
+	<node id="user_ctrl_regs" address="0x40000040"/>
+	<node id="user_stat_regs" address="0x40000041"/>
+	<node id="L1A_count" address="0x40040000"/>
+	<node id="Orbit_count" address="0x40040001"/>
+	<node id="Bunch_count" address="0x40040002"/>
+	<node id="user_iphc_ascii_01" address="0x80000000"/>
+	<node id="user_iphc_ascii_02" address="0x80000001"/>
+	<node id="user_rice_ascii_01" address="0x80000002"/>
+	<node id="user_rice_ascii_02" address="0x80000003"/>
+	<node id="user_rice_fw_ver_year" address="0x80000004"/>
+	<node id="Read_05" address="0x80000005"/>
+	<node id="Read_06" address="0x80000006"/>
+	<node id="Read_07" address="0x80000007"/>
+	<node id="Read_08" address="0x80000008"/>
+	<node id="Read_09" address="0x80000009"/>
+	<node id="Read_10" address="0x8000000a"/>
+	<node id="Read_11" address="0x8000000b"/>
+	<node id="Read_12" address="0x8000000c"/>
+	<node id="Read_13" address="0x8000000d"/>
+	<node id="Read_14" address="0x8000000e"/>
+	<node id="Read_15" address="0x8000000f"/>
+	<node id="pix_emul_0" address="0x80000010"/>
+	<node id="pix_emul_1" address="0x80000011"/>
+	<node id="User_Reset" address="0x80000012"/>
+	<node id="PKAM_Reset" address="0x80000012"/>
+        <node id="ROC_CLK" address="0x80000013"/>
+        <node id="PKAM_Enable" address="0x80000013"/>
+        <node id="Marker_Error" address="0x80000014"/>
+        <node id="Marker_Clk_value" address="0x80000014"/>
+        <node id="ROC_Number" address="0x80000015"/>
+        <node id="pix_emul_3" address="0x80000016"/>
+        <node id="pix_emul_4" address="0x80000017"/>
+        <node id="CHA_ROC0" address="0x80000018"/>
+        <node id="CHB_ROC0" address="0x80000019"/>
+        <node id="CHA_ROC1" address="0x8000001a"/>
+        <node id="CHB_ROC1" address="0x8000001b"/>
+        <node id="CHA_ROC2" address="0x8000001c"/>
+        <node id="CHB_ROC2" address="0x8000001d"/>
+        <node id="CHA_ROC3" address="0x8000001e"/>
+        <node id="CHB_ROC3" address="0x8000001f"/>
+        <node id="CHA_ROC4" address="0x80000020"/>
+        <node id="CHB_ROC4" address="0x80000021"/>
+        <node id="CHA_ROC5" address="0x80000022"/>
+        <node id="CHB_ROC5" address="0x80000023"/>
+        <node id="CHA_ROC6" address="0x80000024"/>
+        <node id="CHB_ROC6" address="0x80000025"/>
+        <node id="CHA_ROC7" address="0x80000026"/>
+        <node id="CHB_ROC7" address="0x80000027"/>
+        <node id="CHA_Hits" address="0x80000028"/>
+        <node id="CHB_Hits" address="0x80000029"/>
+	<node id="Stack_Data_Out_chA" address="0x8000002a"/>
+	<node id="stack_Data_Out_chB" address="0x8000002b"/>
+	<node id="pixfed_stat_regs.tts.word" address="0x81000000"/>
+</node>

@@ -1,4 +1,5 @@
 AMC13DIR=/opt/cactus/include/amc13
+ROOTSYS=/opt/root_v5.34.14.source
 
 ifneq ("$(wildcard $(AMC13DIR))","")
 	SUBDIRS = AMC13 Utils HWDescription HWInterface System src

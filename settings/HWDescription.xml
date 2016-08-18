@@ -8,7 +8,7 @@
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
         <!-- for the DEV lab setup in B186, the bx has to be 381 for the BU clock source and 380 for the TTCci as clock source -->
-        <BGO command="0x14" repeat="1" prescale="0" bx="10" />  <!-- CAL-SYNC-Reset -->
+        <BGO command="0x1" repeat="1" prescale="0" bx="10" />  <!-- CAL-SYNC-Reset -->
         <!--BGO command="0x14" repeat="0" prescale="0" bx="481" /-->
 	<!--<BGO command="0x2e" repeat="0" prescale="0" bx="0" />-->
         <!-- Local enables Local L1A, mode 0 means a trigger every orbit at BX500, rate is 1 for every orbit and burst is 1 
@@ -25,15 +25,15 @@
         <Register name="pixfed_ctrl_regs.acq_ctrl.acq_mode">2</Register>
         <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode">1 </Register>
         <!--this is 0-indexed so 9 will correspond to 10 events-->
-        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">1</Register>
+        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">0</Register>
         <!--0: real data, 1: constants after TBM fifo, 2: pattern before TBM fifo-->
         <Register name="pixfed_ctrl_regs.data_type">0</Register>
         <!-- 0 indexed -->
         <Register name="fe_ctrl_regs.fifo_config.channel_of_interest">0</Register>
-        <!--o for PSI46dig-->
+	<!--o for PSI46dig-->
         <Register name="fe_ctrl_regs.fifo_config.TBM_old_new">0x0</Register>
-        <Register name="fe_ctrl_regs.fifo_config.overflow_value_a">0</Register>
-        <Register name="fe_ctrl_regs.fifo_config.overflow_value_b">0</Register>
+        <Register name="fe_ctrl_regs.fifo_config.overflow_value_a">0x399</Register>
+        <Register name="fe_ctrl_regs.fifo_config.overflow_value_b">0x399</Register>
 
         <!--SLINK HEADER & TRAILER-->
         <Register name="pixfed_ctrl_regs.slink_ctrl.privateEvtNb">0x01</Register>
@@ -43,7 +43,7 @@
         <Register name="pixfed_ctrl_regs.slink_ctrl.slinkFormatH_Evt_stat">0xf</Register>
 
         <!-- TBM MASK -->
-        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFFFFFFFC</Register>
+        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFF00FF00</Register>
         <Register name="pixfed_ctrl_regs.TBM_MASK_2">0x0000FFFF</Register>
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask">0x00</Register>
         <!--<Register name="pixfed_ctrl_regs.PACKET_NB">10</Register>-->
@@ -74,6 +74,12 @@
         <Fitel_Files path="./settings/" />
         <Fitel FMC="0" Id="0" file="FMCFITEL.txt" Enable="" />
         <Fitel FMC="0" Id="1" file="FMCFITEL.txt" Enable="1" />
+    </PixFED>
+    <PixFED Id="1" boardType="CTA">
+        <connection id="board1" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.163:50001" address_table="file://test/addr_table_multi_chan.xml" />
+    </PixFED>
+    <PixFED Id="2" boardType="CTA">
+        <connection id="board2" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.171:50001" address_table="file://test/addr_table_multi_chan.xml" />
     </PixFED>
 </HwDescription>
 

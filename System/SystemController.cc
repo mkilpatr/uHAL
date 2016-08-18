@@ -39,9 +39,10 @@ void SystemController::ConfigureHw( std::ostream& os )
 {
     // write some code
     os << BOLDGREEN <<  "Configuring FEDs: " << RESET << std::endl;
-    for (auto& cFED : fPixFEDVector)
-    {
-        fFEDInterface->ConfigureFED(cFED);
+    //for (auto& cFED : fPixFEDVector)
+    //{
+        auto& cFED = fPixFEDVector[0];
+	fFEDInterface->ConfigureFED(cFED);
 
         if (!cFED->fFitelVector.empty())
         {
@@ -52,7 +53,7 @@ void SystemController::ConfigureHw( std::ostream& os )
             }
         }
         os << "Configured FED " << +cFED->getBeId() << std::endl;
-    }
+    //}
     os << BOLDGREEN << "All FEDs successfully configured!" << RESET << std::endl;
 }
 

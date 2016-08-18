@@ -6,18 +6,18 @@ Amc13Flag     = -D__AMC13__
 DevFlags      =
 
 AMC13DIR=/opt/cactus/include/amc13
-IncludeDirs   =  /opt/cactus/include ../
+IncludeDirs   =  /opt/cactus/include ../ /opt/root_v5.34.14.source/include
 IncludePaths  = $(IncludeDirs:%=-I%)
 
-LibraryDirs   = /opt/cactus/lib ../lib
+LibraryDirs   = /opt/cactus/lib ../lib /opt/root_v5.34.14.source/lib
 LibraryPaths  = $(LibraryDirs:%=-L%)
 
 ifneq ("$(wildcard $(AMC13DIR))","")
-	ExternalObjects= $(LibraryPaths) -lttctest -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lboost_filesystem -lboost_regex -lboost_thread -lcactus_amc13_amc13 -lPh1_Interface -lPh1_Description -lPh1_System -lPh1_Utils -lPh1_Amc13
+	ExternalObjects= $(LibraryPaths) -lttctest -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lboost_filesystem -lboost_regex -lboost_thread -lcactus_amc13_amc13 -lPh1_Interface -lPh1_Description -lPh1_System -lPh1_Utils -lPh1_Amc13 -lHist -lCore -lGpad -lGui -lGX11 -lMatrix -lMathCore -lCint -lGraf -lRIO -lThread -lHistPainter
 	AMC13INSTALLED = yes
 	binaries       = pixel_gui
 else
-	ExternalObjects= $(LibraryPaths) -lttctest -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lboost_filesystem -lboost_regex -lboost_thread -lPh1_Interface -lPh1_Description -lPh1_System -lPh1_Utils
+	ExternalObjects= $(LibraryPaths) -lttctest -lpthread  -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lboost_system -lboost_filesystem -lboost_regex -lboost_thread -lPh1_Interface -lPh1_Description -lPh1_System -lPh1_Utils -lHist -lCore -lGpad -lGui -lGX11 
 	AMC13INSTALLED = no
 	binaries       = pixel_gui
 endif

@@ -214,74 +214,75 @@ void PixFEDFWInterface::findPhases ()
 
 }
 
-//void PixFEDFWInterface::findPhases (uint32_t pScopeFIFOCh)
-//{
-//// Perform all the resets
-//std::vector< std::pair<std::string, uint32_t> > cVecReg;
-//cVecReg.push_back ( { "fe_ctrl_regs.decode_reset", 1 } ); // reset deocode auto clear
-//cVecReg.push_back ( { "fe_ctrl_regs.decode_reg_reset", 1 } ); // reset REG auto clear
-//cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 1} );
-//WriteStackReg (cVecReg);
-//cVecReg.clear();
-//cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 0} );
-//WriteStackReg (cVecReg);
-//cVecReg.clear();
+void PixFEDFWInterface::findPhases2 (uint32_t pScopeFIFOCh)
+{
+// Perform all the resets
+std::vector< std::pair<std::string, uint32_t> > cVecReg;
+cVecReg.push_back ( { "fe_ctrl_regs.decode_reset", 1 } ); // reset deocode auto clear
+cVecReg.push_back ( { "fe_ctrl_regs.decode_reg_reset", 1 } ); // reset REG auto clear
+cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 1} );
+WriteStackReg (cVecReg);
+cVecReg.clear();
+cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 0} );
+WriteStackReg (cVecReg);
+cVecReg.clear();
 
-//// NOTE: here the register idel_individual_ctrl is the base address of the registers for all 48 channels. So each 32-bit word contains the control info for 1 channel. Thus by creating a vector of 48 32-bit words and writing them at the same time I can write to each channel without using relative addresses!
+// NOTE: here the register idel_individual_ctrl is the base address of the registers for all 48 channels. So each 32-bit word contains the control info for 1 channel. Thus by creating a vector of 48 32-bit words and writing them at the same time I can write to each channel without using relative addresses!
 
-//// set the parameters for IDELAY scan
-//std::vector<uint32_t> cValVec;
+// set the parameters for IDELAY scan
+std::vector<uint32_t> cValVec;
 
-//for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
-//// create a Value Vector that contains the write value for each channel
-//cValVec.push_back ( 0x80000000 );
+for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+// create a Value Vector that contains the write value for each channel
+cValVec.push_back ( 0x80000000 );
 
-//WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
-//cValVec.clear();
+WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
+cValVec.clear();
 
-//// set auto_delay_scan and set idel_RST
-//for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
-//cValVec.push_back ( 0xc0000000 );
+// set auto_delay_scan and set idel_RST
+for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+cValVec.push_back ( 0xc0000000 );
 
-//WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
-//cValVec.clear();
+WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
+cValVec.clear();
 
-//// set auto_delay_scan and remove idel_RST
-//for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
-//cValVec.push_back ( 0x80000000 );
+// set auto_delay_scan and remove idel_RST
+for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+cValVec.push_back ( 0x80000000 );
 
-//WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
-//cValVec.clear();
+WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
+cValVec.clear();
 
-//// some additional configuration
-//cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.overflow_value", 0x700e0}); // set 192val
-//cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.channel_of_interest", pScopeFIFOCh} ); // set channel for scope FIFO
-//WriteStackReg (cVecReg);
-//cVecReg.clear();
+// some additional configuration
+//cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.overflow_value_a", 0x700e0}); // set 192val
+//cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.overflow_value_b", 0x700e0}); // set 192val
+cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.channel_of_interest", pScopeFIFOCh} ); // set channel for scope FIFO
+WriteStackReg (cVecReg);
+cVecReg.clear();
 
-//// initialize Phase Finding
-//WriteReg ("fe_ctrl_regs.initialize_swap", 1);
-//std::cout << "Initializing Phase Finding ..." << std::endl << std::endl;
-//std::chrono::milliseconds cWait ( 3000 );
-//std::this_thread::sleep_for ( cWait );
+// initialize Phase Finding
+WriteReg ("fe_ctrl_regs.initialize_swap", 1);
+std::cout << "Initializing Phase Finding ..." << std::endl << std::endl;
+std::chrono::milliseconds cWait ( 3000 );
+std::this_thread::sleep_for ( cWait );
 
-////here I might do the print loop again as Helmut does it in the latest version of the PixFED python script
-//WriteReg ("fe_ctrl_regs.initialize_swap", 0);
+//here I might do the print loop again as Helmut does it in the latest version of the PixFED python script
+WriteReg ("fe_ctrl_regs.initialize_swap", 0);
 
-//std::this_thread::sleep_for ( cWait );
+std::this_thread::sleep_for ( cWait );
 
-//std::cout <<  "Phase finding Results: " << std::endl;
+std::cout <<  "Phase finding Results: " << std::endl;
 
-//uint32_t cNChannel = 24;
-//std::vector<uint32_t> cReadValues = ReadBlockRegValue ( "idel_individual_stat_block", cNChannel * 4 );
+uint32_t cNChannel = 24;
+std::vector<uint32_t> cReadValues = ReadBlockRegValue ( "idel_individual_stat_block", cNChannel * 4 );
 
-//std::cout << BOLDGREEN << "FIBRE CTRL_RDY CNTVAL_Hi CNTVAL_Lo   pattern:                     S H1 L1 H0 L0   W R" << RESET << std::endl;
+std::cout << BOLDGREEN << "FIBRE CTRL_RDY CNTVAL_Hi CNTVAL_Lo   pattern:                     S H1 L1 H0 L0   W R" << RESET << std::endl;
 
-//for (uint32_t cChannel = 0; cChannel < cNChannel; cChannel++)
-//prettyprintPhase (cReadValues, cChannel);
+for (uint32_t cChannel = 0; cChannel < cNChannel; cChannel++)
+prettyprintPhase (cReadValues, cChannel);
 
-//readTTSState();
-//}
+readTTSState();
+}
 
 void PixFEDFWInterface::monitorPhases (uint32_t pScopeFIFOCh)
 {
@@ -480,14 +481,14 @@ std::vector<uint32_t> PixFEDFWInterface::readSpyFIFO()
 {
     std::vector<uint32_t> cSpyA;
     std::vector<uint32_t> cSpyB;
-
+    
     cSpyA = ReadBlockRegValue ( "fifo.spy_A", 2048 );
     cSpyB = ReadBlockRegValue ( "fifo.spy_B", 2048 );
 
-    std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO A:       timestamp" << RESET << std::endl;
-    prettyprintSpyFIFO (cSpyA);
-    std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO B:       timestamp" << RESET << std::endl;
-    prettyprintSpyFIFO (cSpyB);
+    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO A:       timestamp" << RESET << std::endl;
+    //prettyprintSpyFIFO (cSpyA);
+    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO B:       timestamp" << RESET << std::endl;
+    //prettyprintSpyFIFO (cSpyB);
     std::vector<uint32_t> cAppendedSPyFifo = cSpyA;
     return cAppendedSPyFifo;
 }
@@ -561,6 +562,33 @@ std::string PixFEDFWInterface::readFIFO1()
     prettyprintFIFO1 (cFifo1B, cMarkerB, cFIFO1Str);
 
     return cFIFO1Str.str();
+}
+
+std::vector<uint32_t> PixFEDFWInterface::readFIFO1_vec()
+{
+    std::vector<uint32_t> cFifo1A;
+    std::vector<uint32_t> cFifo1B;
+
+    cFifo1A = ReadBlockRegValue ("fifo.spy_1_A", fBlockSize / 4);
+    cFifo1B = ReadBlockRegValue ("fifo.spy_1_B", fBlockSize / 4);
+ 
+    std::vector<uint32_t> cAppendedFifo1 = cFifo1A;
+    return cAppendedFifo1;
+
+}
+
+std::vector<uint32_t> PixFEDFWInterface::readFIFO1Marker()
+{
+  std::vector<uint32_t> cMarkerA;
+  std::vector<uint32_t> cMarkerB;
+
+  
+  cMarkerA = ReadBlockRegValue ("fifo.spy_1_A_marker", fBlockSize / 4);
+  cMarkerB = ReadBlockRegValue ("fifo.spy_1_B_marker", fBlockSize / 4);
+  
+  std::vector<uint32_t> cMarkerFifo1 = cMarkerA;
+
+  return cMarkerFifo1;
 }
 
 // a private member method to pretty print FIFO1 contents

@@ -18,6 +18,7 @@ int main( int argc, char* argv[] ){
   using namespace std;
   int Number_ROCS = 0;
   int PKAM = 0;
+  int PKAM_En = 0;
   int ROC_Clk = 0;
   int Hits_CHA = 0;
   int Hits_CHB = 0;
@@ -64,8 +65,8 @@ int main( int argc, char* argv[] ){
   std::cout << "  How many hits do you want in CHB?" << std::endl;
   std::cout << "          Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl; 
   std::cout << "6. Do You want a PKAM Reset?" << std::endl;
-  std::cout << "  A value of 0x114000 will enable a reset and length 20" << std::endl;
-  std::cout << "  A value of 0x014000 will disable" << std::endl;
+  std::cout << "  A value of 0x14140505 will set the length to 5*256 + 28 clock cycles" << std::endl;
+  std::cout << "  A value of 0x30000000 will enable, 0x0 do disable" << std::endl;
   std::cout << "7. Do You want to set the ROC Clock?" << std::endl;
   std::cout << "  What value do you want to set it to? " << std::endl;
   std::cout << "  A vlue of 0xA0000000 will set the latency to 160" << std::endl;
@@ -361,11 +362,14 @@ int main( int argc, char* argv[] ){
 
     else if( atoi(argv[3]) == 6 ){
       PKAM = strtol(argv[4], NULL, 16);
+      PKAM_En = strtol(argv[5], NULL, 16);
 
       for (int i = 0; i < 8; i++){
         string PKAM_Reset ("PKAM_Reset_");
+	string PKAM_Enable ("PKAM_Enable_");
 	if((Number_Channels & 0x1) == 1){
           PKAM_Reset += Chan[i];
+	  PKAM_Enable += Chan[i];
 
           hw.getNode(PKAM_Reset).write( PKAM );
           ValWord < uint32_t > mem = hw.getNode (PKAM_Reset).read();
@@ -376,7 +380,17 @@ int main( int argc, char* argv[] ){
           ValWord < uint32_t > mem2 = hw2.getNode (PKAM_Reset).read();
           hw2.dispatch();
           std::cout << PKAM_Reset << " = " << std::hex << mem2.value() << std::endl;
-        }
+        
+	  hw.getNode(PKAM_Enable).write( PKAM_En );
+          mem = hw.getNode (PKAM_Enable).read();
+          hw.dispatch();
+          std::cout << PKAM_Enable << " = " << std::hex << mem.value() << std::endl;
+
+          hw2.getNode(PKAM_Enable).write( PKAM_En );
+          mem2 = hw2.getNode (PKAM_Enable).read();
+          hw2.dispatch();
+          std::cout << PKAM_Enable << " = " << std::hex << mem2.value() << std::endl;
+	}
 	Number_Channels = Number_Channels >> 4;
       }
 

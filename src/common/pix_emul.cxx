@@ -18,11 +18,11 @@ int main( int argc, char* argv[] ) {
   using namespace std;
   int Number_ROCS = 0;
   int PKAM = 0;
+  int PKAM_Enable = 0;
   int ROC_Clk = 0;
   int Hits_CHA = 0;
   int Hits_CHB = 0;
   int Reset = 0;
-  int fifo_tx = 0;
   string ROCSA[ 8 ] = {"CHA_ROC0", "CHA_ROC1", "CHA_ROC2", "CHA_ROC3", "CHA_ROC4", "CHA_ROC5", "CHA_ROC6", "CHA_ROC7"};
   string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
 
@@ -63,8 +63,8 @@ int main( int argc, char* argv[] ) {
         std::cout << "  How many hits do you want in CHB?" << std::endl;
         std::cout << "          Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl; 
 	std::cout << "6. Do You want a PKAM Reset?" << std::endl;
-  	std::cout << "  A value of 0x114000 will enable a reset and length 20" << std::endl;
-  	std::cout << "  A value of 0x014000 will disable" << std::endl;
+	std::cout << "  A value of 0x14140505 will set the PKAM length to 5*256 + 20" << std::endl;
+  	std::cout << "  Also need to enable by putting 0x30000000" << std::endl;
   	std::cout << "7. Do You want to set the ROC Clock?" << std::endl;
   	std::cout << "  What value do you want to set it to? " << std::endl;
   	std::cout << "  A vlue of 0x00009898 will set the latency to 160 in both channel A and B" << std::endl;
@@ -142,23 +142,6 @@ int main( int argc, char* argv[] ) {
     	std::cout << "CHB_Hits = " << std::hex << mem2.value() << std::endl;
     }	
   }
-
-  else if( atoi(argv[1]) == 9){
-	int CHA_Event = strtol(argv[2], NULL, 16);
-	int CHB_Event = strtol(argv[3], NULL, 16);
-
-	int MUX = 0;
-	
-	int Buffer = 0x80000000;
-	do{
-		if( CHA_Event && Buffer == 1){
-			
-		}
-	}
-	while( Buffer != 0x1);
-
-  }
-
 
   else if( atoi(argv[1]) == 3 ){
   	int j,k,i;
@@ -342,8 +325,8 @@ int main( int argc, char* argv[] ) {
  }
 
   else if( atoi(argv[1]) == 6 ){
-    if(argc == 3){
       PKAM = strtol(argv[2], NULL, 16);
+      PKAM_Enable = strtol(argv[3], NULL, 16);
 
       hw.getNode("PKAM_Reset").write( PKAM );
       ValWord < uint32_t > mem = hw.getNode ( "PKAM_Reset" ).read();
@@ -354,11 +337,18 @@ int main( int argc, char* argv[] ) {
       ValWord < uint32_t > mem2 = hw2.getNode ( "PKAM_Reset" ).read();
       hw2.dispatch();
       std::cout << "PKAM Reset = " << std::hex << mem2.value() << std::endl;
+
+      hw.getNode("PKAM_Enable").write( PKAM_Enable ); 
+      mem = hw.getNode ( "PKAM_Enable" ).read();
+      hw.dispatch();
+      std::cout << "PKAM Enable = " << std::hex << mem.value() << std::endl;
       
+      hw2.getNode("PKAM_Enable").write( PKAM_Enable );
+      mem2 = hw2.getNode ( "PKAM_Enable" ).read();
+      hw2.dispatch();
+      std::cout << "PKAM Enable = " << std::hex << mem2.value() << std::endl;
 
       return 0;
-    }
-    else {return 0;}
   }
 
   else if( atoi(argv[1]) == 7 ){

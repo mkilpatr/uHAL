@@ -156,6 +156,11 @@ class PixFEDInterface
      * \brief: find Phases for input data stream
      * \param: pScopeFIFOCh: channel for Phase Stability monitoring
      */
+    void findPhases2 ( const PixFED* pFED, uint32_t pScopeFIFOCh );
+    /*!
+     * \brief: find Phases for input data stream
+     * \param: pScopeFIFOCh: channel for Phase Stability monitoring
+     */
     void monitorPhases ( const PixFED* pFED, uint32_t pScopeFIFOCh = 0 );
     /*!
      * \brief: read transparent Fifo
@@ -177,6 +182,8 @@ class PixFEDInterface
      * \return string of the FIFO1 console dump
      */
     std::string readFIFO1 ( const PixFED* pFED );
+    std::vector<uint32_t> readFIFO1_vec( const PixFED* pFED );
+    std::vector<uint32_t> readFIFO1Marker( const PixFED* pFED);
     /*!
      * \brief: read ROC OSD readback word
      * \param: pFED

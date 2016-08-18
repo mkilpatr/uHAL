@@ -1,9 +1,4 @@
 <node id="Example slaves file">
-	<node id="id" address="0x0" description="ID register" fwinfo="endpoint;width=0"/>
-	<node id="csr" address="0x2" description="ctrl/stat register" fwinfo="endpoint;width=1">
-		<node id="ctrl" address="0x0"/>
-		<node id="stat" address="0x1"/>
-	</node>
 	<node id="xpoint" address="0x4" size="0x4" fwinfo="endpoint;width=2"/>
 	<node id="Fitel_ctrl_fifo_tx" address="0x40100000"/>
 	<node id="Fitel_ctrl_fifo_rx" address="0x40100001"/>
@@ -29,18 +24,15 @@
 	<node id="Read_14" address="0x8000000e"/>
 	<node id="Read_15" address="0x8000000f"/>
 	<node id="pix_emul_0" address="0x80000010"/>
-	<node id="pix_emul_1" address="0x80000011"/>
+	<node id="Cal_Trigger" address="0x80000011"/>
+	<node id="Delay_Signal" address="0x80000011"/>
 	<node id="User_Reset" address="0x80000012"/>
-	<node id="PKAM_Reset" address="0x80000012"/>
-	<node id="ROC_CLK" address="0x80000012"/>
-	<node id="Marker_Error" address="0x80000012"/>
-	<node id="Marker_Clk_value" address="0x80000028"/>
 	<node id="PKAM_Reset" address="0x80000012"/>
         <node id="ROC_CLK" address="0x80000013"/>
         <node id="PKAM_Enable" address="0x80000013"/>
         <node id="Marker_Error" address="0x80000014"/>
-        <node id="Marker_Clk_value" address="0x80000014"/>
-        <node id="ROC_Number" address="0x80000015"/>
+        <node id="Marker_Error_CHB" address="0x80000013"/> 
+	<node id="ROC_Number" address="0x80000015"/>
         <node id="pix_emul_3" address="0x80000016"/>
         <node id="pix_emul_4" address="0x80000017"/>
         <node id="CHA_ROC0" address="0x80000018"/>

@@ -467,6 +467,12 @@ void PixFEDInterface::findPhases ( const PixFED* pFED )
     fFEDFW->findPhases ();
 }
 
+void PixFEDInterface::findPhases2 ( const PixFED* pFED, uint32_t pScopeFIFOCh)
+{
+    setBoard ( pFED->getBeId() );
+    fFEDFW->findPhases2 (pScopeFIFOCh);
+}
+
 void PixFEDInterface::monitorPhases (const PixFED* pFED, uint32_t pScopeFIFOCh)
 {
     setBoard ( pFED->getBeId() );
@@ -498,6 +504,17 @@ std::string PixFEDInterface::readFIFO1 ( const PixFED* pFED )
     return fFEDFW->readFIFO1();
 }
 
+std::vector<uint32_t> PixFEDInterface::readFIFO1_vec( const PixFED* pFED )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->readFIFO1_vec();
+}
+
+std::vector<uint32_t> PixFEDInterface::readFIFO1Marker( const PixFED* pFED )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->readFIFO1Marker();
+}
 
 uint32_t PixFEDInterface::readOSDWord ( const PixFED* pFED, uint32_t pROCId, uint32_t pChannelOfInterest )
 {

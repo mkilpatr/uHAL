@@ -129,6 +129,10 @@ class PixFEDFWInterface : public RegManager
     /*!
      * \brief: find correct phases for incoming data stream
      */
+    void findPhases2 (uint32_t pScopeIFIFOch);
+    /*!
+     * \brief: find correct phases for incoming data stream
+     */
     void monitorPhases (uint32_t pScopeFIFOCh = 0);
     /*!
      * \brief: initialize Slink to send data
@@ -147,6 +151,8 @@ class PixFEDFWInterface : public RegManager
      * \brief: read the contents of FIFO 1 for TBM cores A & B
      */
     std::string readFIFO1();
+    std::vector<uint32_t> readFIFO1_vec();
+    std::vector<uint32_t> readFIFO1Marker();
     /*
      * \brief: read the OSD readback word from ROCs
      * \param: ROC Number
