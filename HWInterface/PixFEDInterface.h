@@ -199,6 +199,7 @@ class PixFEDInterface
      * \brief: read the Error FIFO
      */
     void readErrorFIFO (const PixFED* pFED, bool pForce);
+    std::vector<uint32_t> readErrorFIFO_vec(const PixFED* pFED, bool pForce);
     /*!
      * \brief Start a DAQ
      * \param pFED

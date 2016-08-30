@@ -8,12 +8,12 @@
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
         <!-- for the DEV lab setup in B186, the bx has to be 381 for the BU clock source and 380 for the TTCci as clock source -->
-        <BGO command="0x1" repeat="1" prescale="0" bx="381" />  <!-- CAL-SYNC-Reset -->
+        <BGO command="0x14" repeat="1" prescale="0" bx="381" />  <!-- CAL-SYNC-Reset -->
         <!--BGO command="0x14" repeat="0" prescale="0" bx="481" /-->
 	<!--<BGO command="0x2e" repeat="0" prescale="0" bx="0" />-->
         <!-- Local enables Local L1A, mode 0 means a trigger every orbit at BX500, rate is 1 for every orbit and burst is 1 
              for 1 trigger when sending burst (equivalent to single trigger -->
-        <Trigger local="0" mode="1" rate="15" burst="3" rules="0" /> 
+        <Trigger local="0" mode="1" rate="50" burst="4" rules="0" /> 
         <!--<Register tounge="T1" name="test.test">0</Register>-->
         <TTCSimulator>0</TTCSimulator>
     </AMC13>
@@ -25,7 +25,7 @@
         <Register name="pixfed_ctrl_regs.acq_ctrl.acq_mode">2</Register>
         <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode">1 </Register>
         <!--this is 0-indexed so 9 will correspond to 10 events-->
-        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">2</Register>
+        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">3</Register>
         <!--0: real data, 1: constants after TBM fifo, 2: pattern before TBM fifo-->
         <Register name="pixfed_ctrl_regs.data_type">0</Register>
         <!-- 0 indexed -->
@@ -43,7 +43,7 @@
         <Register name="pixfed_ctrl_regs.slink_ctrl.slinkFormatH_Evt_stat">0xf</Register>
 
         <!-- TBM MASK -->
-        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFFFFFFFC</Register>
+        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFF00FF00</Register>
         <Register name="pixfed_ctrl_regs.TBM_MASK_2">0x0000FFFF</Register>
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask">0x00</Register>
         <!--<Register name="pixfed_ctrl_regs.PACKET_NB">10</Register>-->

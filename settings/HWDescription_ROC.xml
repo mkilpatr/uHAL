@@ -8,7 +8,7 @@
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
         <!-- for the DEV lab setup in B186, the bx has to be 381 for the BU clock source and 380 for the TTCci as clock source -->
-        <BGO command="0x1C" repeat="1" prescale="0" bx="100" />  <!-- CAL-SYNC-Reset -->
+        <BGO command="0x1C" repeat="1" prescale="330000" bx="100" />  <!-- CAL-SYNC-Reset -->
         <!--BGO command="0x14" repeat="0" prescale="0" bx="481" /-->
 	<!--<BGO command="0x2e" repeat="0" prescale="0" bx="0" />-->
         <!-- Local enables Local L1A, mode 0 means a trigger every orbit at BX500, rate is 1 for every orbit and burst is 1 
@@ -49,7 +49,7 @@
         <!--<Register name="pixfed_ctrl_regs.PACKET_NB">10</Register>-->
 
         <!--TTS CONFIG-->
-        <Register name="pixfed_ctrl_regs.tts.timeout_check_valid"> 1 </Register>
+        <Register name="pixfed_ctrl_regs.tts.timeout_check_valid"> 0 </Register>
         <Register name="pixfed_ctrl_regs.tts.event_cnt_check_valid"> 1 </Register>
         <Register name="pixfed_ctrl_regs.tts.timeout_value"> 255 </Register>
         <!--<Register name="pixfed_ctrl_regs.tts.evt_timeout_value.tbm_ch_00"> 255 </Register>-->

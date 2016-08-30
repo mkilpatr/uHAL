@@ -10,6 +10,7 @@
 #include "../System/SystemController.h"
 #include "../AMC13/Amc13Controller.h"
 #include "../Utils/Data.h"
+#include "FIFO1.c"
 
 #include <iostream>
 #include <vector>
@@ -64,22 +65,22 @@ void Set_ROCS(int roc_input)
     hw.getNode(roc_num).write( Number_ROCS );
     ValWord < uint32_t > mem = hw.getNode ( roc_num ).read();
     hw.dispatch();
-    std::cout << roc_num << " = " << std::hex << mem.value() << std::endl;
+    //std::cout << roc_num << " = " << std::hex << mem.value() << std::endl;
 
     hw2.getNode(roc_num).write( Number_ROCS );
     ValWord < uint32_t > mem2 = hw2.getNode ( roc_num ).read();
     hw2.dispatch();
-    std::cout << roc_num << " = " << std::hex << mem2.value() << std::endl;
+    //std::cout << roc_num << " = " << std::hex << mem2.value() << std::endl;
 
     hw.getNode(roc_clock).write( ROC_Clk );
     mem = hw.getNode ( roc_clock ).read();
     hw.dispatch();
-    std::cout << roc_clock << " = " << std::hex << mem.value() << std::endl;
+    //std::cout << roc_clock << " = " << std::hex << mem.value() << std::endl;
 
     hw2.getNode(roc_clock).write( ROC_Clk );
     mem2 = hw2.getNode ( roc_clock ).read();
     hw2.dispatch();
-    std::cout << roc_clock << " = " << std::hex << mem2.value() << std::endl;	 
+    //std::cout << roc_clock << " = " << std::hex << mem2.value() << std::endl;	 
   }
 }
 
@@ -691,6 +692,11 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   int Pixel = 0;
   int Pixel_Hit = 0;
   int Incorrect_Pixel = 0;
+  int new_row = 0;
+  int Hit_infoA_buff = 0;
+  int Hit_infoB_buff = 0;
+  int Hit_infoA_new = 0;
+  int Hit_infoB_new = 0;
   std::fill(FIFO.begin(), FIFO.end(), 0);
   std::fill(FIFO_CHB.begin(), FIFO_CHB.end(), 0);
   std::fill(FIFO1.begin(), FIFO1.end(), 0);
@@ -733,14 +739,18 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
     int row = 0;
     int col = 0;
     int adc = 0;
+    int dcol = 0;
 
     for (row = row_start; row < max_row; row++) {
 
       for (col = col_start; col < max_col; col++) {
 
+	if(col % 2 == 0)
+		dcol = col / 2;
+
       	std::cout << "Starting row " << std::dec << row << ", column " << std::dec << col << std::endl;
 
-        for (adc = adc_start; adc < max_adc; adc+=8) {
+        for (adc = adc_start; adc < 8/*max_adc*/; adc+=8) {
 
           for (int j = 0; j < 8; j++) {
 
@@ -750,11 +760,18 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
               ROCSA[j] = ROCSA[j] + index[i];
               ROCSB[j] = ROCSB[j] + index[i];
 	
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSA[j], Hit_infoA);
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSB[j], Hit_infoB);
+	      Hit_infoA_buff = Illegal_Col(dcol);
+              Hit_infoB_buff = Illegal_Col(dcol);
+              new_row = New_Row(row, col);
 
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA);
-              cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB);
+              Hit_infoA_new = (new_row << 16) | (Hit_infoA_buff << 8) | (Hit_infoA & 0xFF);
+              Hit_infoB_new = (new_row << 16) | (Hit_infoB_buff << 8) | (Hit_infoB & 0xFF);
+
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSA[j], Hit_infoA_new);
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSB[j], Hit_infoB_new);
+
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA_new);
+              cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB_new);
           
               ROCSA[j] = ROCSA[j].substr(0,9);
               ROCSB[j] = ROCSB[j].substr(0,9);
@@ -863,7 +880,7 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
 
             if (((FIFO[i] >> 4) & 0xF) == 0x2 && Next_step_roc == 2) {
 	      Current_col_num = ((FIFO[i - 1] & 0xF) << 2) | ((FIFO[i] & 0xF) >> 2);
-	      test_col = col;
+	      test_col = Hit_infoA_buff;
 	      //std::cout << "col = " << std::dec << col << " Current_col_num = " << std::dec << Current_col_num << std::endl;
 	      // std::cout << std::hex << FIFO[i-1] << " = " << std::dec << FIFO[i-1] << std::endl;
 	      // std::cout << std::hex << FIFO[i] << " = " << std::dec << FIFO[i] << std::endl;
@@ -875,6 +892,8 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
 	      if (Current_col_num != test_col){
 	        Incorrect_col++;
 		Error_Count++;
+		std::cout << std::dec << Current_col_num << " not equal to " << test_col << std::endl;
+	        std::cout << std::bitset<31> (Hit_infoA_new) << std::dec << std::endl;
 	      }
 	      Next_step_roc = 3;
 	    }
@@ -897,12 +916,14 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
 	    }
 
 	    if (((FIFO[i] >> 4) & 0xF) == 0x4 && Next_step_roc == 4) {
-              Current_row_num = ((FIFO[i-1] & 0xF) << 3) | ((FIFO[i] & 0xF) >> 1);
-	      test_row = row;
+              Current_row_num = ((FIFO[i-2] & 0x3) << 7) | ((FIFO[i-1] & 0xF) << 3) | ((FIFO[i] & 0xF) >> 1);
+	      test_row = new_row;
 	      //std::cout << "Current_row_num = " << std::dec << Current_row_num << " row = " << std::dec << row << std::endl;
 	      if (Current_row_num != test_row){
 	        Incorrect_row++;
 	        Error_Count++;
+	      	std::cout << Current_row_num << " not equal to " << test_row << std::endl;
+	    	std::cout << std::bitset<31> (Hit_infoA_new) << std::dec << std::endl;
 	      }
 	      Next_step_roc = 5;
 	    }
@@ -1219,12 +1240,6 @@ int Test_Hits_Resets( int test_input )
     // get the board info of all boards and start the acquistion
     for (auto& cFED : cSystemController.fPixFEDVector)
     {
-      /*for (auto& cFitel : cFED->fFitelVector)
-        {
-            //cSystemController.fFEDInterface->ReadLightOnFibre(cFitel);
-            cSystemController.fFEDInterface->ReadADC(cFitel, cChannelOfInterest, true);
-	    }*/
-
 	//auto& cFED = cSystemController.fPixFEDVector[0];
 	cSystemController.fFEDInterface->getBoardInfo(cFED);
         cSystemController.fFEDInterface->findPhases(cFED);
@@ -1256,6 +1271,12 @@ int Test_Hits_Resets( int test_input )
     std::fill(FIFO.begin(), FIFO.end(), 0);
     std::fill(FIFO_CHB.begin(), FIFO_CHB.end(), 0);
 
+    std::cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << std::endl;
+    cAmc13Controller.fAmc13Interface->SendEC0();
+    cAmc13Controller.fAmc13Interface->EnableBGO(0);
+    sleep(0.001);
+    cAmc13Controller.fAmc13Interface->DisableBGO(0);
+	
 
     for (int l = 0; l < Loops; l++)
     {
@@ -1282,200 +1303,11 @@ int Test_Hits_Resets( int test_input )
             FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
             cSystemController.fFEDInterface->readFIFO1(cFED);
 
-	    int k = 0;
-	    int j = 0;
-	    int h = 0;
-	    int g = 0;
-	    int Next_step = 0;
-	    int Num_ROC = 0;
-	    int END_Event = 0;
-	    int Error_Loop = 0;
-	    int Start_Event = 0;
-	    int Stack[2];
-	    int Do_Stack = 0;
-
-	    for( std::vector<unsigned int>::size_type i = 0; i != FIFO.size(); i++ )
-	    {    
-
-		if(FIFO[i] == 0x00000000){
-			break;
-		}
-
-		if(((FIFO[i] >> 4) & 0xF) == 0x8){
-			Error_Count = 0;
-			Error_Loop = 0;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0x9)
-		{
-			j = i;
-		  	Total_Events++;
-			Current_Event_Num = ((FIFO[i - 1] & 0xF) << 4) | (FIFO[i] & 0xF);
-			if(Current_Event_Num - Compare_Event != 1 && Compare_Event - Current_Event_Num != 255){
-				Incorrect_Event_Num++;
-                        	Error_Count++;
-			}
-			Compare_Event = Current_Event_Num;
-		}
-
-		if(((FIFO[i] >> 4) & 0xF) == 0x8 && Next_step == 0){ 
-		  	Next_step = 1;
-			Start_Event = i;
-			Do_Stack = 0;
-                        continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0x8 && Next_step != 0){
-			Incorrect_Header++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0x9 && Next_step == 1){
-		  	Next_step = 2;
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0x9 && Next_step != 1){
-			Incorrect_Header++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0xA && Next_step == 2){
-		  	Next_step = 3;
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xA && Next_step != 2){
-			Incorrect_Header++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0xB && Next_step == 3){
-		  	Next_step = 4;
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xB && Next_step != 3){
-			Incorrect_Header++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0xC && Next_step == 4){
-		  	Next_step = 5;
-			Num_ROC = 0;
-
-			if(FIFO[i] & 0x8){
-				cout << "There was a NTP at event " << dec << Current_Event_Num << endl;
-			}
-
-			if(FIFO[i] & 0x4){
-                                cout << "There was a TBM Reset at event " << dec << Current_Event_Num << endl;
-                        }
-			if(FIFO[i] & 0x2){
-                                cout << "There was a ROC Reset at event " << dec << Current_Event_Num << endl;
-                        }
-
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xC && Next_step != 4){
-			Incorrect_Trailer++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0xD && Next_step == 5){
-		  	Next_step = 6;
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xD && Next_step != 5){
-			Incorrect_Trailer++;
-			Error_Count++;
-			continue;
-		}
-
-		if(((FIFO[i] >> 4) & 0xF) == 0xE && Next_step == 6){
-		  	Next_step = 7;
-	
-			if( ((FIFO[i] & 0x4) >> 2) == 0x1 ){
-			  std::cout << "There was a PKAM Reset at Event " << dec << Current_Event_Num << std::endl;
-			}
-
-			Stack[0] = (FIFO[i] & 0x3);
-			continue;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xE && Next_step != 6){
-			Incorrect_Trailer++;
-			Error_Count++;
-			continue;
-		}
-		
-		if(((FIFO[i] >> 4) & 0xF) == 0xF && Next_step == 7){
-		  	Next_step = 0;
-			END_Event = i;
-			Error_Loop = 1;
-			Do_Stack = 1;
-			Stack[1] = (Stack[0] << 4) | (FIFO[i] & 0xF);
-			
-			if(ROC_Value != 1){
-				Incorrect_ROC++;
-				Error_Count++;
-			}	
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0xF && (FIFO[i - 1] >> 4) != 0xF && Next_step != 7){
-			Incorrect_Trailer++;
-                        Error_Count++;
-			END_Event = i;
-			Error_Loop = 1;
-		}
-		
-		if(Stack[1] != 0x0 && Do_Stack == 1){
-			cout << "The Stack count is " << dec << Stack[1] << endl;
-		}
-
-		if(Error_Count != 0 && Error_Loop == 1){
-			std::cout << "Event = " << std::dec << Current_Event_Num << " and Loop = " << std::dec << l << std::endl; 
-			std::cout << "Total Number of Errors = " <<std::dec << Error_Count << std::endl;
-			int Error = 0;
-
-			for(Error = Start_Event; Error <= END_Event; Error++){
-				std::cout << "FIFO[" << std::dec << Error << "] = " << std::hex << FIFO[Error] << std::endl;
-			}
-
-			for(Error = Start_Event; Error <= END_Event; Error++){
-				std::cout << "FIFO_CHB[" << std::dec << Error << "] = " << std::hex << FIFO_CHB[Error] << std::endl;
-			}
-			Error_Loop = 0;
-		}
-
-		if(((FIFO[i] >> 4) & 0xF) == 0x6){
-			Pixel++;
-		}
-		else if(((FIFO[i] >> 4) & 0xF) == 0x7){
-			Num_ROC++;
-			ROC_Value = 0;
-		}
-	
-		if(Num_ROC == 8){
-			ROC_Value = 1;
-		}
-		else{
-			ROC_Value = 0;
-		}
-
-	      }
+      	    Spy_FIFO_Event(FIFO, FIFO_CHB);
 
         }
 
     }
-
-    std::cout << "There have been " << std::dec << Total_Events << " Events" << std::endl;
-    std::cout << "There have been " << std::dec << Incorrect_Event_Num << " Incorrect Event Numbers " << std::endl;
-    std::cout << "There have been " << std::dec << Incorrect_Header << " Incorrect TBM Headers " << std::endl;
-    std::cout << "There have been " << std::dec << Incorrect_Trailer << " Incorrect TBM Trailers " << std::endl;
-    std::cout << "There have been " << std::dec << Incorrect_ROC << " incorrect Number of ROCs " << std::endl;
-    std::cout << "There have been " << std::dec << Incorrect_Pixel << " incorrect Number of Pixels " << std::endl;
- 
-   // exit(0);
     return 0;
 }
 
@@ -1678,215 +1510,11 @@ void Stack_Test (int loops_input, int choice_input)
       FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
     //}
 
-    int k = 0;
-    int j = 0;
-    int h = 0;
-    int Next_step = 0;
-    int Next_step_roc = 1;
-    int Num_ROC = 0;
-    int END_Event = 0;
-    int Error_Loop = 0;
-    int Start_Event = 0;
-    int Stack[2];
-    int Do_Stack = 0;
-
-    for( std::vector<unsigned int>::size_type i = 0; i != FIFO.size(); i++ )
-    {
-
-      if(FIFO[i] == 0x00){
-        break;
-      }
-
-      //std::cout << "FIFO[" << std::dec << i << "] = " << std::hex << (FIFO[i] & 0xFF) << std::endl;
-
-      if(((FIFO[i] >> 4) & 0xF) == 0x8){
-        Error_Count = 0;
-	Error_Loop = 0;
-	h++;
-        if( h >= 2 ){
-	  k = 1;
-	}
-      }
-
-      if(((FIFO[i] >> 4) & 0xF) == 0x9)
-      {
-        j = i;
-	Total_Events++;
-	Current_Event_Num = ((FIFO[i - 1] & 0xF) << 4) | (FIFO[i] & 0xF);
-	if(Current_Event_Num - Compare_Event != 1 && Compare_Event - Current_Event_Num != 255){
-	  Incorrect_Event_Num++;
-          Error_Count++;
-	}
-	Compare_Event = Current_Event_Num;
-      } 
-
-      if(((FIFO[i] >> 4) & 0xF) == 0x8 && Next_step == 0){ 
-        Next_step = 1;
-	Start_Event = i;
-	Do_Stack = 0;
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0x8 && Next_step != 0){
-	Incorrect_Header++;
-	Error_Count++;
-	continue;
-      }
-						
-      if(((FIFO[i] >> 4) & 0xF) == 0x9 && Next_step == 1){
-	Next_step = 2;
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0x9 && Next_step != 1){
-        Incorrect_Header++;
-	Error_Count++;
-	continue;
-      }
-						
-      if(((FIFO[i] >> 4) & 0xF) == 0xA && Next_step == 2){
-        Next_step = 3;
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xA && Next_step != 2){
-        Incorrect_Header++;
-	Error_Count++;
-	continue;
-      }
-						
-      if(((FIFO[i] >> 4) & 0xF) == 0xB && Next_step == 3){
-	Next_step = 4;
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xB && Next_step != 3){
-	Incorrect_Header++;
-	Error_Count++;
-	continue;
-      }
-         
-      if(((FIFO[i] >> 4) & 0xF) == 0xC && Next_step == 4){
-	Next_step = 5;
-	Num_ROC = 0;
-
-	if(FIFO[i] & 0x8){
-	  std::cout << "There was a NTP" << std::endl;
-	}
-
-	if(FIFO[i] & 0x4){
-          std::cout << "There was a TBM Reset" << std::endl;
-        }
-
-        if(FIFO[i] & 0x2){
-          std::cout << "There was a ROC Reset" << std::endl;
-        }
-
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xC && Next_step != 4){
-        Incorrect_Trailer++;
-	Error_Count++;
-	continue;
-      }
-	    				
-      if(((FIFO[i] >> 4) & 0xF) == 0xD && Next_step == 5){
-	Next_step = 6;
-        if (FIFO[i] & 0x1) {
-          std::cout << "Stack is full!" << std::endl;
-        }
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xD && Next_step != 5){
-	Incorrect_Trailer++;
-	Error_Count++;
-	continue;
-      }
-
-      if(((FIFO[i] >> 4) & 0xF) == 0xE && Next_step == 6){
-	Next_step = 7;
-	//std::cout << FIFO[i] << std::endl;
-	  			
-	if( ((FIFO[i] & 0x4) >> 2) == 0x1 ){
-	  std::cout << "There was a PKAM Reset at Event " << std::dec << Current_Event_Num << std::endl;
-	}
-        num_ROC = -1;
-
-	Stack[0] = (FIFO[i] & 0x3);
-	continue;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xE && Next_step != 6){
-	Incorrect_Trailer++;
-        Error_Count++;
-        num_ROC = -1;
-        continue;
-      }
-
-      if(((FIFO[i] >> 4) & 0xF) == 0xF && Next_step == 7){
-        Next_step = 0;
-	END_Event = i;
-	Error_Loop = 1;
-        Do_Stack = 1;
-	Stack[1] = (Stack[0] << 4) | (FIFO[i] & 0xF);	
-	  				
-	if(ROC_Value != 1){
-	  Incorrect_ROC++;
-	  Error_Count++;
-	}	
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0xF && ((FIFO[i - 1] >> 4)) & 0xF != 0xF && Next_step != 7){
-        Incorrect_Trailer++;
-	Error_Count++;
-	END_Event = i;
-	Error_Loop = 1;
-      }
-	    				
-      if(Stack[1] != 0x0 && Do_Stack == 1){
-        std::cout << "The Stack count is " << std::dec << Stack[1] << std::endl;
-        if (Stack[1] > max_stack) {
-          max_stack = Stack[1];
-        }
-      }
-
-      if(Error_Count != 0 && Error_Loop == 1 && choice_input == 0){
-        std::cout << "Event = " << std::dec << Current_Event_Num << " and Loop = " << std::dec << l << std::endl; 
-	std::cout << "Total Number of Errors = " <<std::dec << Error_Count << std::endl;
-	int Error = 0;
-
-        //for(Error = Start_Event; Error <= END_Event; Error++){
-	//  std::cout << "FIFO[" << std::dec << Error << "] = " << std::hex << FIFO[Error] << std::endl;
-	//}
-
-	//for(Error = Start_Event; Error <= END_Event; Error++){
-	//  std::cout << "FIFO_CHB[" << std::dec << Error << "] = " << std::hex << FIFO_CHB[Error] << std::endl;
-        //}
-	Error_Loop = 0;
-      }
-
-      if(((FIFO[i] >> 4) & 0xF) == 0x6){
-        Pixel++;
-      }
-      else if(((FIFO[i] >> 4) & 0xF) == 0x7){
-        Num_ROC++;
-	ROC_Value = 0;
-      }
-	    			
-      if(Num_ROC == 8){
-        ROC_Value = 1;
-      }
-      else{
-        ROC_Value = 0;
-      }
-
-    } // Ends error check loop
-      			
-  } // Ends Loops loop
-
-  std::cout << "There have been " << std::dec << Total_Events << " Events" << std::endl;
-  //std::cout << "There have been " << std::dec << Incorrect_Event_Num << " Incorrect Event Numbers " << std::endl;
-  //std::cout << "There have been " << std::dec << Incorrect_Header << " Incorrect TBM Headers " << std::endl;
-  //std::cout << "There have been " << std::dec << Incorrect_Trailer << " Incorrect TBM Trailers " << std::endl;
-  //std::cout << "There have been " << std::dec << Incorrect_ROC << " incorrect Number of ROCs " << std::endl;
-  //std::cout << "There have been " << std::dec << Incorrect_Pixel << " incorrect Number of Pixels " << std::endl;
+      Spy_FIFO_Event(FIFO, FIFO_CHB);
 
   std::cout << "Max stack was " << std::dec << max_stack << std::endl;
 
   //exit(0);
 
+}
 }

@@ -534,6 +534,12 @@ void PixFEDInterface::readErrorFIFO (const PixFED* pFED, bool pForce)
     fFEDFW->readErrorFIFO (pForce);
 }
 
+std::vector<uint32_t> PixFEDInterface::readErrorFIFO_vec (const PixFED* pFED, bool pForce)
+{
+    setBoard (pFED->getBeId() );
+    return fFEDFW->readErrorFIFO_vec (pForce);
+}
+
 //////////////
 // Readout  Methods
 //////////////

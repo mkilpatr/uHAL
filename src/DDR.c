@@ -11,6 +11,7 @@
 #include "../AMC13/Amc13Controller.h"
 #include "../Utils/Data.h"
 #include "Gray.c"
+#include "Event_Analysis.c"
 
 #include <iostream>
 #include <vector>
@@ -25,26 +26,28 @@
 void Delay_Time( int Delay_init );
 void Test_Timeouts( int Delay1, int Delay2, int Loops);
 
-void Pixel_Alive_Plots_DDR(int DCOL[], int PXL[]){
+//Create a pixel alive plot with DDR data and add it to the root file for analysis
+void Pixel_Alive_Plots_DDR(int DCOL_DDR[], int PXL_DDR[]){
 
         TFile * fout;
         fout = new TFile("Pixel_Alive.root", "update");
-        TH2F *h4 = new TH2F("h4","DCOL vs PXL DDR",29,-0.5,28.5,180,-0.5,179.5);
-        h4->SetDirectory(fout);
-        h4->GetXaxis()->SetTitle("DCOL");
-        h4->GetYaxis()->SetTitle("PXL");
+        TH2F *h5 = new TH2F("h5","DCOL vs PXL DDR",29,-0.5,28.5,180,-0.5,179.5);
+        h5->SetDirectory(fout);
+        h5->GetXaxis()->SetTitle("DCOL");
+        h5->GetYaxis()->SetTitle("PXL");
 
         for(Int_t i = 0; i < 4160; i++){
-                h4->Fill(DCOL[ i ], PXL[ i ]);
+                h5->Fill(DCOL_DDR[ i ], PXL_DDR[ i ]);
         }
 
-        TCanvas * c4 = new TCanvas("c1","Pixel Alive",200,10,700,500);
-        h4->Draw("COLZ");
-        h4->Write();
-        h4->SaveAs("Pixel_Alive_In.pdf","pdf");
+        TCanvas * c5 = new TCanvas("c5","Pixel Alive",200,10,700,500);
+        h5->Draw("COLZ");
+        h5->Write();
+        //h4->SaveAs("Pixel_Alive_DDR.pdf","pdf");
 }
        
-
+//Used to change a header of trailer to any ouput desired by the user (12 bits)
+//Can send it at any 8 bit frequency and to any channel '0' is all channels
 void Marker_Error( int Which_Chan, int Marker_Type, int Marker_Value, int Marker_Rate){
 	using namespace uhal;
         using namespace std;
@@ -89,6 +92,8 @@ void Marker_Error( int Which_Chan, int Marker_Type, int Marker_Value, int Marker
 	}
 }
 
+//Able to change the delay time of the output to cause timeouts
+//Currently the max is a delay of 255*clock
 void Delay_Time( int Delay_init ){
 
 	using namespace uhal;
@@ -117,16 +122,30 @@ void Delay_Time( int Delay_init ){
 
 }
 
-
-void Test_Timeouts( int Delay1, int Delay2, int Loops){
+//Test resets on the DDR and Delay studies varying delays or incorrect markers
+void Test_Timeouts( int Delay1, int Delay2, int Loops, int Choice_Input){
 
 
   using namespace std;
 
   const char* cHWFile;
 
+  if(Choice_Input == 0){
   std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay.xml");
   cHWFile = filename.c_str();
+  }
+  else if(Choice_Input == 1){
+  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_TBM.xml");
+  cHWFile = filename.c_str();
+  }
+  else if(Choice_Input == 2){
+  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_ROC.xml");
+  cHWFile = filename.c_str();
+  }
+  else if(Choice_Input == 3){
+  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
+  cHWFile = filename.c_str();
+  }
 
     uhal::setLogLevelTo(uhal::Debug());
 
@@ -157,7 +176,7 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops){
     
     std::cout << "Configure OK" << std::endl;
 
-
+  // Can loop over all FEDs since we aren't writing to GLIB registers within the program
   // get the board info of all boards and start the acquistion
   for (auto& cFED : cSystemController.fPixFEDVector)
   {
@@ -169,38 +188,14 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops){
 
   std::vector<uint32_t> DDR;
   std::vector<unsigned int> DDR_buff;
-
-  unsigned int Event_one = 0;
-  unsigned int Event_two = 0;
-  int Total_Events = 0;
-  int Incorrect_Header = 0;
-  int Incorrect_Trailer = 0;
-  int Incorrect_Event_Num = 0;
-  int Incorrect_ROC = 0;
-  int ROC_Value = 0;
-  //int Loops = 1;
-  uint32_t Current_Event_Num = 0;
-  int Error_Count = 0;
-  int Do_Error = 0;
-  int Pixel = 0;
-  int Pixel_Hit = 0;
-  int Incorrect_Pixel = 0;
-  int Compare_Event = 0;
-  int Channel_Number = 0;
-  int ROC_Identifier_1 = 0;
-  int ROC_Identifier_2 = 0;
-  int Timeout_Error = 0;
-  int DDR_Event_Num_Error = 0;
-  int pixel_hit = 0;
-  int DCOL = 0;
-  int PXL = 0;
-
   std::fill(DDR.begin(), DDR.end(), 0);
   std::fill(DDR_buff.begin(), DDR_buff.end(), 0);
 
   std::cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << std::endl;
   cAmc13Controller.fAmc13Interface->SendEC0();
-  cAmc13Controller.fAmc13Interface->EnableBGO(1);
+  cAmc13Controller.fAmc13Interface->EnableBGO(0);
+  sleep(0.001);
+  cAmc13Controller.fAmc13Interface->DisableBGO(0);
 
   for (int l = 0; l < Loops; l++){
 
@@ -208,18 +203,21 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops){
 
       if(l == 0){
   	cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
-        Delay_Time(Delay1);
+        if(Choice_Input == 0)
+		Delay_Time(Delay1);
         sleep(4);
         cAmc13Controller.fAmc13Interface->BurstL1A();
       }
       else if(l == 1){
-        Delay_Time(Delay2);
+        if(Choice_Input == 0)
+		Delay_Time(Delay2);
         sleep(0.04);
         cAmc13Controller.fAmc13Interface->BurstL1A();
       }
 
       else{
-        Delay_Time(Delay1);
+	if(Choice_Input == 0)
+        	Delay_Time(Delay1);
         sleep(0.04);
         cAmc13Controller.fAmc13Interface->BurstL1A();
       }
@@ -227,86 +225,29 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops){
       sleep(0.001);
 
       cSystemController.fFEDInterface->readSpyFIFO(cFED);
-//      cSystemController.fFEDInterface->readErrorFIFO(cFED, true);
-//      cSystemController.fFEDInterface->readTTSState(cFED);
+      cSystemController.fFEDInterface->readErrorFIFO(cFED, true);
+      cSystemController.fFEDInterface->readTTSState(cFED);
       DDR = cSystemController.fFEDInterface->ReadData(cFED, 0 );
 
     }
 
-    for ( uint32_t i = 0; i != DDR.size(); i++){
-	std::cout << "DDR[" << std::dec << i << "] = " << std::hex << DDR[i] << DDR[ i + 1 ] << std::endl;
-
-	if((DDR[i] >> 28) == 0x5){
-		//Header
-		//std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
-		Total_Events++;
-		Current_Event_Num = (DDR[i] & 0xF);
-              	if(Current_Event_Num - Compare_Event != 1 && Compare_Event - Current_Event_Num != 255){
-                	Incorrect_Event_Num++;
-                	Error_Count++;
-              	}
-              	Compare_Event = Current_Event_Num;		
-	}
-
-	else if((DDR[i] >> 28) == 0xa){
-		//Trailer
-		//std::cout << BOLDRED << "Evt. Length " << ( (cWord >> 32) & 0xFFFFFF ) << " CRC " << ( (cWord >> 16) & 0xFFFF) << RESET << std::endl;
-	}
-	else{
-		//std::cout << "Channel " << ( (cWord1 >> 26) & 0x3F) << " ROC " <<  ( (cWord1 >> 21) & 0x1F) << " DC " << ( (cWord1 >> 16) & 0x1F) << " Pxl " << ( (cWord1 >> 8) & 0xFF) << " PH " << (cWord1 & 0xFF) << std::endl;
-            	//std::cout << "Channel " << ( (cWord2 >> 26) & 0x3F) << " ROC " <<  ( (cWord2 >> 21) & 0x1F) << " DC " << ( (cWord2 >> 16) & 0x1F) << " Pxl " << ( (cWord2 >> 8) & 0xFF) << " PH " << (cWord2 & 0xFF) << std::endl;
-		Channel_Number = (DDR[i] >> 26) & 0x3F;
-		ROC_Identifier_1 = (DDR[i] >> 21) & 0x1F;
-		ROC_Identifier_2 = (DDR[i + 1] >> 21) & 0x1F;
-		if( ROC_Identifier_1 == 29){
-			Timeout_Error++;
-			std::cout << "There was a timeout at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
-		}
-		else if( ROC_Identifier_1 == 31){
-			DDR_Event_Num_Error++;
-			std::cout << "There was an Event Num error at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
-		}
-		else if ( ROC_Identifier_1 >= 1 && ROC_Identifier_1 <= 8){
-			pixel_hit++;
-			DCOL = (DDR[i] >> 16) & 0x1F;
-			PXL = (DDR[i] >> 8) & 0xFF;
-		}
-		else if ( ROC_Identifier_1 == 30){
-			
-		}
-	}
-
-
-	
-    }
+    DDR_Event(DDR);
 
   }
-	std::cout << "There were " << Incorrect_Event_Num << " Incorrect Event numbers." << std::endl;
-	std::cout << "There were " << Timeout_Error << " timeout errors." << std::endl;
-	std::cout << "There were " << pixel_hit << " pixel hits." << std::endl;
  
 }
 
+//Pixel alive for DDR sending the DCOL/PXL information
+//Currently gets caught in infinite loop cause FED missed trigger or not full register
 void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_start, int row_input, int adc_start, int adc_input, int choice_input)
-{
+  {
 
   using namespace std;
-  using namespace uhal;
 
   const char* cHWFile;
 
-  if (choice_input == 0) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_DDR.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 1) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 2) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack2.xml");
-    cHWFile = filename.c_str();
-  }
+  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_DDR.xml");
+  cHWFile = filename.c_str();
 
   string ROCSA[ 8 ] = {"CHA_ROC0_", "CHA_ROC1_", "CHA_ROC2_", "CHA_ROC3_", "CHA_ROC4_", "CHA_ROC5_", "CHA_ROC6_", "CHA_ROC7_"};
   string ROCSB[ 8 ] = {"CHB_ROC0_", "CHB_ROC1_", "CHB_ROC2_", "CHB_ROC3_", "CHB_ROC4_", "CHB_ROC5_", "CHB_ROC6_", "CHB_ROC7_"};
@@ -324,14 +265,6 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
   cAmc13Controller.InitializeAmc13( cHWFile, std::cout );
   cSystemController.InitializeHw(cHWFile, std::cout);
 
-  // configure the HW
-  cAmc13Controller.ConfigureAmc13( std::cout );
-  cSystemController.ConfigureHw(std::cout );
-
-  //cAmc13Controller.fAmc13Interface->StartL1A();
-  //for (fAmc13Controller->BGO vector)
-  cAmc13Controller.fAmc13Interface->EnableBGO(0);
-
   auto cSetting = cSystemController.fSettingsMap.find("NAcq");
   int cNAcq = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 10;
   cSetting = cSystemController.fSettingsMap.find("BlockSize");
@@ -342,18 +275,22 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
 
   cSetting = cSystemController.fSettingsMap.find("ROCOfInterest");
   int cROCOfInterest = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 0;
-  
+
+  cAmc13Controller.ConfigureAmc13( std::cout );
+  cSystemController.ConfigureHw(std::cout );
+
+  std::cout << "Configure OK" << std::endl;
+
+  //Need multiple FED ID's since we are writing to GLIB registers in the propgram
   auto& cFED = cSystemController.fPixFEDVector[0];
   cSystemController.fFEDInterface->getBoardInfo(cFED);
   cSystemController.fFEDInterface->findPhases(cFED);
-  
+  cSystemController.fFEDInterface->Start (cFED);
+
   auto& cFED2 = cSystemController.fPixFEDVector[1];
   auto& cFED3 = cSystemController.fPixFEDVector[2];
 
-  std::vector<unsigned int> DDR;
-  unsigned int Event_one = 0;
-  unsigned int Event_two = 0;
-
+  std::vector<uint32_t> DDR;
   int Column[ 4199 ] = { NULL };
   int Row[ 4199 ] = { NULL };
   //int Spy_Col[ 4199 ] = { NULL };
@@ -361,27 +298,23 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
   int DDR_DCOL[ 4199 ] = { NULL };
   int DDR_PXL[ 4199 ] = { NULL };
   int Max_Array = 0;
+  int Compare_DCOL = 0;
+  int Compare_PXL = 0;
   int Total_Events = 0;
   int Incorrect_Header = 0;
   int Incorrect_Trailer = 0;
   int Incorrect_Event_Num = 0;
   int Incorrect_ROC = 0;
-  int Incorrect_adc = 0;
-  int Incorrect_col = 0;
-  int Incorrect_row = 0;
-  int Incorrect_pix_info = 0;
   int ROC_Value = 0;
-  int Compare_Event = 0;
-  int Loops = loops_input;
+  int Stack = 0;
   uint32_t Current_Event_Num = 0;
-  uint32_t Current_col_num = 0;
-  uint32_t Current_row_num = 0;
-  uint32_t Current_adc_num = 0;
   int Error_Count = 0;
   int Do_Error = 0;
   int Pixel = 0;
   int Pixel_Hit = 0;
+  int Roc_num = 0;
   int Incorrect_Pixel = 0;
+  int Compare_Event = 0;
   int new_row = 0;
   int Hit_infoA_buff = 0;
   int Hit_infoB_buff = 0;
@@ -396,20 +329,23 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
   int DCOL[ 4199 ] = { NULL };
   int PXL[ 4199 ] = { NULL };
 
-
   std::fill(DDR.begin(), DDR.end(), 0);
-  
-int max_row = row_input; //atoi(argv[3]); //80
+
+  std::cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << std::endl;
+  cAmc13Controller.fAmc13Interface->SendEC0();
+  cAmc13Controller.fAmc13Interface->EnableBGO(1);
+
+  int max_row = row_input; //atoi(argv[3]); //80
   if (max_row > 80 || max_row == 0) {
-        max_row = 80;
+    max_row = 80;
   }
   int max_col = col_input; //atoi(argv[4]); //52
   if (max_col > 52 || max_col == 0) {
-        max_col = 52;
+    max_col = 52;
   }
   int max_adc = adc_input; //atoi(argv[5]); //255
   if (max_adc > 255 || max_adc == 0) {
-        max_adc = 255;
+    max_adc = 255;
   }
 
   int adc_loops = 0;
@@ -424,134 +360,170 @@ int max_row = row_input; //atoi(argv[3]); //80
 
   std::string index[8] = {"0","1","2","3","4","5","6","7"};
 
-  for (int l = 0; l < Loops; l++)
-  {
-	int Hit_infoA = (0x00000001 * adc_start) + (0x00000100 * col_start) + (0x00010000 * row_start);
-    	int Hit_infoB = (0x00000001 * adc_start) + (0x00000100 * col_start) + (0x00010000 * row_start);
+  for (int l = 0; l < loops_input; l++){
 
-    	int row = 0;
-    	int col = 0;
-    	int dcol = 0;
-    	int adc = 0;
+    int Hit_infoA = (0x00000001 * adc_start) + (0x00000100 * col_start) + (0x00010000 * row_start);
+    int Hit_infoB = (0x00000001 * adc_start) + (0x00000100 * col_start) + (0x00010000 * row_start);
 
-    	for (row = row_start; row < max_row; row++) {
-		
-		for (col = col_start; col < max_col; col++) {
+    int row = 0;
+    int col = 0;
+    int dcol = 0;
+    int adc = 0;
 
-        		if(col % 2 == 0)
-                		dcol = col/2;
+    for(int row = row_start; row < max_row; row++){
 
-        		//std::cout << "Starting row " << std::dec << row << ", column " << std::dec << col << std::endl;
-        		for (adc = adc_start; adc < 8/*max_adc*/; adc+=8) {
+      for(int col = col_start; col < max_col; col++){
+	
+	//Changing COL to DCOL
+        if(col % 2 == 0)
+          dcol = col/2;
 
-          			for (int j = 0; j < 8; j++) {
+          std::cout << "Starting row " << std::dec << row << ", column " << std::dec << col << std::endl;
 
-            				for (int i = 0; i < 1; i++) {
-              				//Write_ROCs( i, Hit_infoA, Hit_infoB);
-						ROCSA[j] = ROCSA[j] + index[i];
-              					ROCSB[j] = ROCSB[j] + index[i];
+          for (adc = adc_start; adc < 8/*max_adc*/; adc+=8) {
 
-              					Hit_infoA_buff = Illegal_Col(dcol);
-              					Hit_infoB_buff = Illegal_Col(dcol);
-              					new_row = New_Row(row, col);
+            for (int j = 0; j < 8; j++) {
 
-              					Hit_infoA_new = (new_row << 16) | (Hit_infoA_buff << 8) | (Hit_infoA & 0xFF);
-              					Hit_infoB_new = (new_row << 16) | (Hit_infoB_buff << 8) | (Hit_infoB & 0xFF);
+              for (int i = 0; i < 1; i++) {
+                //Write_ROCs( i, Hit_infoA, Hit_infoB);
+                ROCSA[j] = ROCSA[j] + index[i];
+                ROCSB[j] = ROCSB[j] + index[i];
 
-              					cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSA[j], Hit_infoA_new);
-              					cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSB[j], Hit_infoB_new);
+		//Here the loop infor is changed to the base 6 format that is required by the FED
+                Hit_infoA_buff = Illegal_Col(dcol);
+                Hit_infoB_buff = Illegal_Col(dcol);
+                new_row = New_Row(row, col);
 
-              					cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA_new);
-              					cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB_new);
+                Hit_infoA_new = (new_row << 16) | (Hit_infoA_buff << 8) | (Hit_infoA & 0xFF);
+                Hit_infoB_new = (new_row << 16) | (Hit_infoB_buff << 8) | (Hit_infoB & 0xFF);
 
-              					ROCSA[j] = ROCSA[j].substr(0,9);
-              					ROCSB[j] = ROCSB[j].substr(0,9);
+                cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSA[j], Hit_infoA_new);
+                cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSB[j], Hit_infoB_new);
 
-            				}
-            				Hit_infoA = Hit_infoA + 0x00000001;
-            				Hit_infoB = Hit_infoB + 0x00000001;
+                cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA_new);
+                cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB_new);
 
-           	 			adc_loops++;
-          			}
+                ROCSA[j] = ROCSA[j].substr(0,9);
+                ROCSB[j] = ROCSB[j].substr(0,9);
 
-          			cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
+              }
+              Hit_infoA = Hit_infoA + 0x00000001;
+              Hit_infoB = Hit_infoB + 0x00000001;
 
-          			//for (auto& cFED : cSystemController.fPixFEDVector)
-          			if(l == 0 && row == 0 && col == 0 && adc == 0){
-              				sleep(8);
-              				cAmc13Controller.fAmc13Interface->BurstL1A();
-            			}
-            			else{
-              				cAmc13Controller.fAmc13Interface->BurstL1A();
-            			}
-            			sleep(0.050);
+              adc_loops++;
+          }
 
-				cSystemController.fFEDInterface->readSpyFIFO(cFED);
-				//cSystemController.fFEDInterface->readErrorFIFO(cFED, true);
-      				//cSystemController.fFEDInterface->readTTSState(cFED);
-				DDR = cSystemController.fFEDInterface->ReadData(cFED, 0 );
 
-				int Roc_num;
-          			int adc_adjust;
-          			int row_adjust;
-          			int col_adjust;
-          			int n = (row*52) + col;
-          			int k = 0;
-          			int j = 0;
-          			int h = 0;
-          			int Next_step = 0;
-          			int Next_step_roc = 1;
-          			int Error_Count = 0;
-          			int Num_ROC = 0;
-          			int END_Event = 0;
-          			int Error_Loop = 0;
-          			int Start_Event = 0;
-          			int Stack;
-          			int Do_Stack = 0;
-          			int ROC = 1;
+          if(l == 0 && row == 0 && col == 0 && adc == 0){
+             cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
+             sleep(8);
+             cAmc13Controller.fAmc13Interface->BurstL1A();
+          }
 
-				DDR = cSystemController.fFEDInterface->ReadData(cFED, 0 );
+          else{
+             cAmc13Controller.fAmc13Interface->BurstL1A();
+          }
 
-	    			for ( uint32_t i = 0; i != DDR.size(); i+=2){
-        				std::cout << "DDR[" << std::dec << i << "] = " << std::hex << DDR[i] << DDR[ i + 1 ] << std::endl;
+          sleep(0.001);
+          DDR = cSystemController.fFEDInterface->ReadData(cFED, 0 );
 
-        				if((DDR[i] >> 28) == 0x5){
-                				//Header
-						//std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
-						Total_Events++;
-        				}
+          int n = (row*52) + col;
 
-        				else if((DDR[i] >> 28) == 0xa){
-                				//Trailer
-                				//std::cout << BOLDRED << "Evt. Length " << ( (cWord >> 32) & 0xFFFFFF ) << " CRC " << ( (cWord >> 16) & 0xFFFF) << RESET << std::endl;
-                       			}
-                			else{
-                				//std::cout << "Channel " << ( (cWord1 >> 26) & 0x3F) << " ROC " <<  ( (cWord1 >> 21) & 0x1F) << " DC " << ( (cWord1 >> 16) & 0x1F) << " Pxl " << ( (cWord1 >> 8) & 0xFF) << " PH " << (cWord1 & 0xFF) << std::endl;
-                				//std::cout << "Channel " << ( (cWord2 >> 26) & 0x3F) << " ROC " <<  ( (cWord2 >> 21) & 0x1F) << " DC " << ( (cWord2 >> 16) & 0x1F) << " Pxl " << ( (cWord2 >> 8) & 0xFF) << " PH " << (cWord2 & 0xFF) << std::endl;
- 						Channel_Number = (DDR[i] >> 26) & 0x3F;
-                				ROC_Identifier_1 = (DDR[i] >> 21) & 0x1F;
-                				ROC_Identifier_2 = (DDR[i + 1] >> 21) & 0x1F;
-                				if( ROC_Identifier_1 == 29){
-                        				Timeout_Error++;
-                        				std::cout << "There was a timeout at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
-                				}
-                				else if( ROC_Identifier_1 == 31){
-                        				DDR_Event_Num_Error++;
-                        				std::cout << "There was an Event Num error at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
-                				}
-                				else if ( ROC_Identifier_1 = 1){// && ROC_Identifier_1 <= 8){
-                        				pixel_hit++;
-                        				DCOL[ n ]  = (DDR[i] >> 16) & 0x1F;
-                        				PXL[ n ] = (DDR[i] >> 8) & 0xFF;
-                				}
+          for ( uint32_t i = 0; i != DDR.size(); i++){
+            //std::cout << "DDR[" << std::dec << i << "] = " << std::hex << DDR[i] << " " << DDR[ i + 1 ] << std::endl;
 
-					}
-				} //Scan DDR loop
-			} // ADC loop
-		} // COL loop
-	} // Row loop
-  } // Loop loop
+            if((DDR[i] >> 28) == 0x5){
+              //Header
+              //std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
+              Total_Events++;
+              Current_Event_Num = ((DDR[i]) & 0xFFFFFF);
+              if(Current_Event_Num - Compare_Event != 1 && Compare_Event - Current_Event_Num != 255){
+                Incorrect_Event_Num++;
+                Error_Count++;
+              }
+              Compare_Event = Current_Event_Num;    
+            }
 
-  Pixel_Alive_Plots_DDR(DCOL, PXL); 
+            else if((DDR[i] >> 28) == 0xa){
+              //Trailer
+              //std::cout << BOLDRED << "Evt. Length " << ( (cWord >> 32) & 0xFFFFFF ) << " CRC " << ( (cWord >> 16) & 0xFFFF) << RESET << std::endl;
+            }
+            else{
+              //std::cout << "Channel " << ( (cWord1 >> 26) & 0x3F) << " ROC " <<  ( (cWord1 >> 21) & 0x1F) << " DC " << ( (cWord1 >> 16) & 0x1F) << " Pxl " << ( (cWord1 >> 8) & 0xFF) << " PH " << (cWord1 & 0xFF) << std::endl;
+              //std::cout << "Channel " << ( (cWord2 >> 26) & 0x3F) << " ROC " <<  ( (cWord2 >> 21) & 0x1F) << " DC " << ( (cWord2 >> 16) & 0x1F) << " Pxl " << ( (cWord2 >> 8) & 0xFF) << " PH " << (cWord2 & 0xFF) << std::endl;
+              Channel_Number = (DDR[i] >> 26) & 0x3F;
+              ROC_Identifier_1 = (DDR[i] >> 21) & 0x1F;
+              ROC_Identifier_2 = (DDR[i] >> 21) & 0x1F;
+              if( ROC_Identifier_1 == 29){
+                Timeout_Error++;
+                std::cout << "There was a timeout at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
+                Stack = DDR[i] & 0x3F;
+              }
+              else if( ROC_Identifier_1 == 31){
+                DDR_Event_Num_Error++;
+                std::cout << "There was an Event Num error at event " << std::dec << Current_Event_Num << " in channel " << Channel_Number << std::endl;
+              }
+              else if ( ROC_Identifier_1 == 1 && Channel_Number == 1 && ((DDR[ i - 1 ] >> 28) != 0xa) ){// && ROC_Identifier_1 <= 8){
+                if (ROC_Identifier_2 == 8)
+                  Roc_num = 1;
+                else
+                  Roc_num = 0;
+                pixel_hit++;
+                DCOL[ n ] = (DDR[i] >> 16) & 0x1F;
+                PXL[ n ] = (DDR[i] >> 8) & 0xFF;
+		Compare_DCOL = Hit_infoA_buff;
+                Compare_PXL = new_row;
 
-}	
+              /*adc_adjust = adc + Roc_num - 1;
+              if ((FIFO1[i] & 0xff) != adc_adjust) {
+                std::cout << "ADC error! Correct ADC = " << std::dec << adc_adjust << std::endl;
+                std::cout << "ADC = " << std::dec << (FIFO1[i] & 0xff) << std::endl;
+              }*/
+
+              if ( PXL[ n ] != Compare_PXL) {
+                std::cout << "PXL Error, PXL input = " << std::dec << Compare_PXL << "PXL output = " << PXL[n] << std::endl;
+              }
+              if ( DCOL[ n ] != Compare_DCOL) {
+                std::cout << "DCOL  Error, DCOL input = " << std::dec << Compare_DCOL << "DCOL ouput = " << DCOL[n] << std::endl;
+              }
+              
+	      }
+              else if ( ROC_Identifier_1 == 30){
+                if(Roc_num != 1){
+                  Incorrect_ROC++;
+                  Error_Count++;
+                }
+                if((DDR[i] & 0x80) >> 7){
+                  std::cout << "There was a NTP at event " << Current_Event_Num << std::endl;
+                }
+
+                if((DDR[i] & 0x40) >> 6){
+                  std::cout << "There was a TBM Reset at event " << Current_Event_Num << std::endl;
+                }
+
+                if((DDR[i] & 0x20) >> 5){
+                  std::cout << "There was a ROC Reset at event " << Current_Event_Num << std::endl;
+                }
+
+                if((DDR[i] & 0x10) >> 4){
+                  std::cout << "Stack is full!" << std::endl;
+                }
+
+                if(((DDR[i] & 0x4000) >> 18)){
+                  std::cout << "There was a PKAM Reset at Event " << std::dec << Current_Event_Num << std::endl;
+                }
+
+                if(Stack != 0){
+                  std::cout << "The stack count is " << std::dec << Stack << std::endl;
+                }
+              }
+            }
+          }//Scan DDR
+        }//adc loop
+      }//col loop
+    }//row loop
+  }//Loops loop
+
+  //Feed the info into the histograms
+  Pixel_Alive_Plots_DDR(DCOL, PXL);
+}

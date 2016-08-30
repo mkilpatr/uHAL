@@ -167,6 +167,7 @@ class PixFEDFWInterface : public RegManager
      * \brief: read the Error FIFO
      */
     void readErrorFIFO (bool pForce);
+    std::vector<uint32_t> readErrorFIFO_vec (bool pForce);
     /*!
      * \brief Start a DAQ
      */
@@ -275,6 +276,7 @@ class PixFEDFWInterface : public RegManager
     void prettyprintPhase ( const std::vector<uint32_t>& pData, int pChannel );
     void decode_symbols (const std::vector<uint32_t>& pInData, std::vector<uint8_t>& p5bSymbol, std::vector<uint8_t>& p5bNRZI, std::vector<uint8_t>& p4bNRZI);
     void prettypPrintErrors (const uint32_t& cWord);
+    void prettypPrintErrors_test (const uint32_t& cWord);
 
     // FPGA CONFIG METHODS
   public:

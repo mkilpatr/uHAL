@@ -3,6 +3,7 @@
 #include <vector>
 using namespace std;
 
+//Change COL to DCOL
 int Illegal_Col( int col){
         int new_col = 0;
         int col_buff = 0;
@@ -15,6 +16,7 @@ int Illegal_Col( int col){
         return new_col;
 }
 
+//Change Row to PXL address
 int New_Row( int row, int col){
         int new_row;
         int PXL_mid_right = (row*2) % 36;
@@ -43,6 +45,17 @@ int New_Row( int row, int col){
 
 }
 
+int DCOL_Encode( int DCOL_Input){
+	int DCOL = (((DCOL_Input & 0x38) >> 3)*6) + (DCOL_Input & 0x7);
+	return DCOL;
+}
+
+int PXL_Encode( int PXL_Input ){
+	int PXL = (((PXL_Input & 0x1C0) >> 6)*36) + (((PXL_Input & 0x38) >> 3)*6) + (PXL_Input & 0x7);
+	return PXL;
+}
+
+//Create gray code but isn't actually used in the program
 std::vector< string > generateGrayArr(){
 	vector<string> arr;
         vector<unsigned int> GrayCode;

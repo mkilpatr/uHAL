@@ -742,6 +742,47 @@ void PixFEDFWInterface::readErrorFIFO (bool pForce)
     }
 }
 
+std::vector<uint32_t> PixFEDFWInterface::readErrorFIFO_vec (bool pForce)
+{   
+    if (pForce)
+    {   
+        std::cout << "Forcing read of ERROR Fifo!" << std::endl;
+        //first, enable the error fifo
+        WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 1);
+    }
+                   
+    //then poll for error fifo ready=1
+    while (ReadReg ("pixfed_stat_regs.error_fifo_read_rdy") != 1) usleep (100);
+                                    
+    //std::cout << "Error FIFO read ready =1! " << std::endl;
+                                            
+    uint32_t cErrorWords = ReadReg ("pixfed_stat_regs.error_fifo_wr_data_count");
+
+    std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
+                                                       
+    std::vector<uint32_t> cErrors = ReadBlockRegValue ("ERROR_fifo" , cErrorWords );
+    
+    //std::vector<uint32_t> Error_buffer = cErrors;
+
+
+    WriteReg ("pixfed_ctrl_regs.error_fifo_read_done", 1);
+
+    while (ReadReg ("pixfed_stat_regs.error_fifo_read_rdy") = 1) usleep (100);
+
+    WriteReg ("pixfed_ctrl_regs.error_fifo_read_done", 0);
+
+    if (pForce) WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 0);
+
+    //std::cout << "ERROR Fifo content: " << std::endl;
+
+    /*for(auto& cWord : cErrors){
+	prettypPrintErrors_test(cWord);
+    	Error_buffer.push_back(cWord);
+    }*/
+
+    return cErrors;
+}
+
 void PixFEDFWInterface::prettypPrintErrors (const uint32_t& cWord)
 {
     uint32_t cChannel = (cWord & 0xFC000000) >> 26;
@@ -896,21 +937,22 @@ std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pB
     {
         cVal = ReadReg ( fStrFull );
 
+	//std::cout << "Do loop" << std::endl;
+
         if ( cVal == 0 ) std::this_thread::sleep_for ( cWait );
     }
     while ( cVal == 0 );
-
 
     if (fCalibMode == 1)
     {
         //I am in calibration mode and thus the FW gets to decide how many words to read and they come from DDR0!
         uint32_t cNWords32 = ReadReg ("pixfed_stat_regs.cnt_word32from_start");
-        std::cout << "Requesting " << fNEvents_calmode << " Events in Calibration Mode and thus reading " << cNWords32 << " 32 bit words from DDR " << 0 << std::endl;
+        //std::cout << "Requesting " << fNEvents_calmode << " Events in Calibration Mode and thus reading " << cNWords32 << " 32 bit words from DDR " << 0 << std::endl;
         //in normal TBM Fifo mode read 2* the number of words read from the FW
         //in FEROL IPBUS mode read the number of 32 bit words + 2*2*pNEvents (1 factor 2 is for 64 bit words)
         cBlockSize = (fAcq_mode == 1) ?  2 * cNWords32/* + 1*/ :
                      cNWords32 + (2 * 2 * fNEvents_calmode) /* + 1*/;
-        std::cout << "This translates into " << cBlockSize << " words in the current mode: " << fAcq_mode << std::endl;
+        //std::cout << "This translates into " << cBlockSize << " words in the current mode: " << fAcq_mode << std::endl;
     }
     else
     {
@@ -993,18 +1035,24 @@ void PixFEDFWInterface::prettyprintSlink (const std::vector<uint64_t>& pData )
         //std::cout << std::hex << cWord << std::dec << std::endl;
     }
 
+    std::cout << std::dec << std::endl;
+
+    int Head = 0;
+
     for (auto& cWord : pData)
     {
         //now run Jordans decoder. First, check the header
-        if ( (cWord >> 60) == 0x5 )
+        if ( ((cWord >> 60) == 0x5) && Head == 0 )
         {
             //Header
+     	    Head = 1;
             std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
 
         }
         else if ( (cWord >> 60) == 0xa )
         {
             //Trailer
+            Head = 0;
             std::cout << BOLDRED << "Evt. Length " << ( (cWord >> 32) & 0xFFFFFF ) << " CRC " << ( (cWord >> 16) & 0xFFFF) << RESET << std::endl;
 
         }
