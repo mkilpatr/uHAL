@@ -36,23 +36,29 @@ int main( int argc, char* argv[] ) {
   ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
   HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
   HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
+  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
 
   if(argc == 1) {
-	std::cout << "Cal_Trigger is enabled by 0x100, disabled by 0x000" << std::endl;
+	std::cout << "CSR_Mode is enabled by 0x100, disabled by 0x000" << std::endl;
   	return 0;
   }
 
   int Delay = strtol(argv[1], NULL, 16);
   
-  hw.getNode( "Cal_Trigger" ).write(Delay);
-  ValWord< uint32_t > mem = hw.getNode ( "Cal_Trigger" ).read();
+  hw.getNode( "CSR_Mode" ).write(Delay);
+  ValWord< uint32_t > mem = hw.getNode ( "CSR_Mode" ).read();
   hw.dispatch();
-  std::cout << "Cal_Trigger = " << std::hex << mem.value() << std::endl;
+  std::cout << "CSR_Mode = " << std::hex << mem.value() << std::endl;
 
-  hw2.getNode( "Cal_Trigger" ).write(Delay);
-  ValWord< uint32_t > mem2 = hw2.getNode ( "Cal_Trigger" ).read();
+  hw2.getNode( "CSR_Mode" ).write(Delay);
+  ValWord< uint32_t > mem2 = hw2.getNode ( "CSR_Mode" ).read();
   hw2.dispatch();
-  std::cout << "Cal_Trigger = " << mem2.value() << std::endl;
+  std::cout << "CSR_Mode = " << mem2.value() << std::endl;
+
+  hw3.getNode( "CSR_Mode" ).write(Delay);
+  ValWord< uint32_t > mem3 = hw3.getNode ( "CSR_Mode" ).read();
+  hw3.dispatch();
+  std::cout << "CSR_Mode = " << mem3.value() << std::endl;
 
   return 0;
 }

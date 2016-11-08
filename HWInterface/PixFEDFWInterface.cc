@@ -134,6 +134,15 @@ void PixFEDFWInterface::findPhases ()
 {
     // Perform all the resets
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
+    cVecReg.push_back ( { "ctrl.ttc_xpoint_A_out3", 0 } ); // Set correct route to FCLKA to TTC Decoder
+    cVecReg.push_back ( { "pixfed_ctrl_regs.reset_all_clocks", 1 } ); // Reset the clocks
+    WriteStackReg (cVecReg);
+    cVecReg.clear();
+    sleep(1);
+    cVecReg.push_back ( { "pixfed_ctrl_regs.reset_all_clocks", 0 } );
+    WriteStackReg (cVecReg);
+    cVecReg.clear();
+    sleep(1);
     cVecReg.push_back ( { "fe_ctrl_regs.decode_reset", 1 } ); // reset deocode auto clear
     cVecReg.push_back ( { "fe_ctrl_regs.decode_reg_reset", 1 } ); // reset REG auto clear
     cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 1} );
@@ -148,7 +157,7 @@ void PixFEDFWInterface::findPhases ()
     // set the parameters for IDELAY scan
     std::vector<uint32_t> cValVec;
 
-    for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+    for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         // create a Value Vector that contains the write value for each channel
         cValVec.push_back ( 0x80000000 );
 
@@ -156,14 +165,14 @@ void PixFEDFWInterface::findPhases ()
     cValVec.clear();
 
     // set auto_delay_scan and set idel_RST
-    for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+    for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         cValVec.push_back ( 0xc0000000 );
 
     WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
     cValVec.clear();
 
     // set auto_delay_scan and remove idel_RST
-    for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+    for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         cValVec.push_back ( 0x80000000 );
 
     WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
@@ -218,6 +227,15 @@ void PixFEDFWInterface::findPhases2 (uint32_t pScopeFIFOCh)
 {
 // Perform all the resets
 std::vector< std::pair<std::string, uint32_t> > cVecReg;
+cVecReg.push_back ( { "ctrl.ttc_xpoint_A_out3", 0 } ); // Set correct route to FCLKA to TTC Decoder
+cVecReg.push_back ( { "pixfed_ctrl_regs.reset_all_clocks", 1 } ); // Reset the clocks
+WriteStackReg (cVecReg);
+cVecReg.clear();
+sleep(1);
+cVecReg.push_back ( { "pixfed_ctrl_regs.reset_all_clocks", 0 } );
+WriteStackReg (cVecReg);
+cVecReg.clear();
+sleep(1);
 cVecReg.push_back ( { "fe_ctrl_regs.decode_reset", 1 } ); // reset deocode auto clear
 cVecReg.push_back ( { "fe_ctrl_regs.decode_reg_reset", 1 } ); // reset REG auto clear
 cVecReg.push_back ( { "fe_ctrl_regs.idel_ctrl_reset", 1} );
@@ -232,7 +250,7 @@ cVecReg.clear();
 // set the parameters for IDELAY scan
 std::vector<uint32_t> cValVec;
 
-for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
 // create a Value Vector that contains the write value for each channel
 cValVec.push_back ( 0x80000000 );
 
@@ -240,14 +258,14 @@ WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
 cValVec.clear();
 
 // set auto_delay_scan and set idel_RST
-for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
 cValVec.push_back ( 0xc0000000 );
 
 WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
 cValVec.clear();
 
 // set auto_delay_scan and remove idel_RST
-for (uint32_t cChannel = 0; cChannel < 48; cChannel++)
+for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
 cValVec.push_back ( 0x80000000 );
 
 WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
@@ -256,9 +274,9 @@ cValVec.clear();
 // some additional configuration
 //cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.overflow_value_a", 0x700e0}); // set 192val
 //cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.overflow_value_b", 0x700e0}); // set 192val
-cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.channel_of_interest", pScopeFIFOCh} ); // set channel for scope FIFO
-WriteStackReg (cVecReg);
-cVecReg.clear();
+//cVecReg.push_back ( { "fe_ctrl_regs.fifo_config.channel_of_interest", pScopeFIFOCh} ); // set channel for scope FIFO
+//WriteStackReg (cVecReg);
+//cVecReg.clear();
 
 // initialize Phase Finding
 WriteReg ("fe_ctrl_regs.initialize_swap", 1);
@@ -485,26 +503,19 @@ std::vector<uint32_t> PixFEDFWInterface::readSpyFIFO()
     cSpyA = ReadBlockRegValue ( "fifo.spy_A", 2048 );
     cSpyB = ReadBlockRegValue ( "fifo.spy_B", 2048 );
 
-    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO A:       timestamp" << RESET << std::endl;
-    //prettyprintSpyFIFO (cSpyA);
-    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO B:       timestamp" << RESET << std::endl;
-    //prettyprintSpyFIFO (cSpyB);
+    std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO A:       timestamp" << RESET << std::endl;
+    prettyprintSpyFIFO (cSpyA);
+    std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO B:       timestamp" << RESET << std::endl;
+    prettyprintSpyFIFO (cSpyB);
     std::vector<uint32_t> cAppendedSPyFifo = cSpyA;
     return cAppendedSPyFifo;
 }
 
 std::vector<uint32_t> PixFEDFWInterface::readSpyFIFO_CHB()
 {
-    std::vector<uint32_t> cSpyA;
     std::vector<uint32_t> cSpyB;
-
-    cSpyA = ReadBlockRegValue ( "fifo.spy_A", 2048 );
     cSpyB = ReadBlockRegValue ( "fifo.spy_B", 2048 );
 
-    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO A:       timestamp" << RESET << std::endl;
-    //prettyprintSpyFIFO (cSpyA);
-    //std::cout << std::endl << BOLDBLUE << "TBM_SPY FIFO B:       timestamp" << RESET << std::endl;
-    //prettyprintSpyFIFO (cSpyB);
     std::vector<uint32_t> cAppendedSPyFifo = cSpyB;
     return cAppendedSPyFifo;
 }
@@ -564,15 +575,33 @@ std::string PixFEDFWInterface::readFIFO1()
     return cFIFO1Str.str();
 }
 
-std::vector<uint32_t> PixFEDFWInterface::readFIFO1_vec()
+std::vector<std::vector<uint32_t>> PixFEDFWInterface::readFIFO1_vec()
 {
+    std::stringstream cFIFO1Str;
     std::vector<uint32_t> cFifo1A;
     std::vector<uint32_t> cFifo1B;
+    std::vector<uint32_t> cMarkerA;
+    std::vector<uint32_t> cMarkerB;
+    std::vector<std::vector<uint32_t>> cAppendedFifo1(2);
 
     cFifo1A = ReadBlockRegValue ("fifo.spy_1_A", fBlockSize / 4);
     cFifo1B = ReadBlockRegValue ("fifo.spy_1_B", fBlockSize / 4);
- 
-    std::vector<uint32_t> cAppendedFifo1 = cFifo1A;
+    cMarkerA = ReadBlockRegValue ("fifo.spy_1_A_marker", fBlockSize / 4);
+    cMarkerB = ReadBlockRegValue ("fifo.spy_1_B_marker", fBlockSize / 4);
+    
+    cAppendedFifo1[0] = cFifo1A;
+    cAppendedFifo1[1] = cMarkerA;
+
+    std::cout << std::endl << BOLDBLUE <<  "FIFO 1 Channel A: " << RESET << std::endl;
+    cFIFO1Str << "FIFO 1 Channel A: " << std::endl;
+    prettyprintFIFO1 (cFifo1A, cMarkerA);
+    prettyprintFIFO1 (cFifo1A, cMarkerA, cFIFO1Str);
+    
+    std::cout << std::endl << BOLDBLUE << "FIFO 1 Channel B: " << RESET << std::endl;
+    cFIFO1Str << "FIFO 1 Channel B: " << std::endl;
+    prettyprintFIFO1 (cFifo1B, cMarkerB);
+    prettyprintFIFO1 (cFifo1B, cMarkerB, cFIFO1Str);
+
     return cAppendedFifo1;
 
 }
@@ -742,11 +771,33 @@ void PixFEDFWInterface::readErrorFIFO (bool pForce)
     }
 }
 
+std::vector<uint32_t> PixFEDFWInterface::TTCHistoryFIFO(bool pForce){
+	std::cout << "-> TTC_HISTORY_FIFO_read_rdy :" << ReadReg( "TTC_HISTORY_FIFO_read_rdy") << std::endl;
+        std::cout << "-> TTC_HISTORY_FIFO_wr_data_count :" << ReadReg( "TTC_HISTORY_wr_data_count") << std::endl;
+
+        std::cout << "---> Force read" << std::endl;
+        WriteReg("TTC_HISTORY.TTC_HISTORY_FIFO_force_read",1);
+        int WordsNbToRead = ReadReg("TTC_HISTORY_wr_data_count");
+        std::cout << "->" << WordsNbToRead << " words to read from ERR_FIFO..." << std::endl;
+        std::vector< unsigned int > ERR_FIFO_rdData = ReadBlockRegValue("TTC_HISTORY_FIFO", WordsNbToRead);
+
+        for( int i = 0; i < WordsNbToRead; i++)
+                std::cout << std::hex << ERR_FIFO_rdData[i] << "Event :" << ((ERR_FIFO_rdData[i]&0xfffc0)>>6) << " BX: " << ((ERR_FIFO_rdData[i]&0xfff00000)>>20) << " B data: " << (ERR_FIFO_rdData[i]&0x3f) << std::endl;
+
+        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_read_done",1);
+        sleep(1);
+        std::cout << "-> TTC_HISTORY_FIFO_read_rdy :" << ReadReg( "TTC_HISTORY_FIFO_read_rdy") << std::endl;
+        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_force_read",0);
+        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_read_done",0);
+	
+	return ERR_FIFO_rdData;
+}
+
 std::vector<uint32_t> PixFEDFWInterface::readErrorFIFO_vec (bool pForce)
 {   
     if (pForce)
     {   
-        std::cout << "Forcing read of ERROR Fifo!" << std::endl;
+        //std::cout << "Forcing read of ERROR Fifo!" << std::endl;
         //first, enable the error fifo
         WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 1);
     }
@@ -758,7 +809,7 @@ std::vector<uint32_t> PixFEDFWInterface::readErrorFIFO_vec (bool pForce)
                                             
     uint32_t cErrorWords = ReadReg ("pixfed_stat_regs.error_fifo_wr_data_count");
 
-    std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
+    //std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
                                                        
     std::vector<uint32_t> cErrors = ReadBlockRegValue ("ERROR_fifo" , cErrorWords );
     
@@ -775,10 +826,10 @@ std::vector<uint32_t> PixFEDFWInterface::readErrorFIFO_vec (bool pForce)
 
     //std::cout << "ERROR Fifo content: " << std::endl;
 
-    /*for(auto& cWord : cErrors){
-	prettypPrintErrors_test(cWord);
-    	Error_buffer.push_back(cWord);
-    }*/
+    //for(auto& cWord : cErrors){
+//	prettypPrintErrors_test(cWord);
+    	//Error_buffer.push_back(cWord);
+ //   }
 
     return cErrors;
 }
@@ -822,6 +873,17 @@ bool PixFEDFWInterface::ConfigureBoard ( const PixFED* pPixFED, bool pFakeData )
     //Primary Configuration
     WriteReg ( "pixfed_ctrl_regs.PC_CONFIG_OK", 0 );
     std::cout << "PC_CONFIG_OK (0) in Configure" << std::endl;
+
+    WriteReg("pixfed_ctrl_regs.reset_all_clocks", 1);
+    usleep(10000);
+    WriteReg("pixfed_ctrl_regs.reset_all_clocks", 0);
+    usleep(10000);
+
+    WriteReg("pixfed_ctrl_regs.sw_TTC_decod_reset", 1);
+    usleep(10000);
+    WriteReg("pixfed_ctrl_regs.sw_TTC_decod_reset", 0);
+    usleep(10000);
+
     //cVecReg.push_back ( {"pixfed_ctrl_regs.rx_index_sel_en", 0} );
     cVecReg.push_back ( {"pixfed_ctrl_regs.DDR0_end_readout", 0} );
     cVecReg.push_back ( {"pixfed_ctrl_regs.DDR1_end_readout", 0} );
@@ -922,7 +984,7 @@ void PixFEDFWInterface::Resume()
 
 std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pBlockSize )
 {
-    readTTSState();
+    //readTTSState();
 
     uint32_t cBlockSize = 0;
     std::chrono::milliseconds cWait ( 10 );
@@ -932,14 +994,15 @@ std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pB
 
     //poll for the selected DDR bank to be full
     uhal::ValWord<uint32_t> cVal;
-
+    int i = 0;
     do
     {
         cVal = ReadReg ( fStrFull );
 
 	//std::cout << "Do loop" << std::endl;
 
-        if ( cVal == 0 ) std::this_thread::sleep_for ( cWait );
+        if ( cVal == 0 ) {std::this_thread::sleep_for ( cWait ); i++;}
+	if (i == 5000) break;
     }
     while ( cVal == 0 );
 
@@ -977,7 +1040,7 @@ std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pB
 
     if (!fCalibMode) fNthAcq++;
 
-    readTTSState();
+    //readTTSState();
     return cData;
 }
 
@@ -1049,7 +1112,7 @@ void PixFEDFWInterface::prettyprintSlink (const std::vector<uint64_t>& pData )
             std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
 
         }
-        else if ( (cWord >> 60) == 0xa )
+        else if ( (cWord >> 60) == 0xa && (((cWord >> 54) & 0x3F) == 0x0))
         {
             //Trailer
             Head = 0;

@@ -55,9 +55,10 @@ void Marker_Error( int Which_Chan, int Marker_Type, int Marker_Value, int Marker
         ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
         HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
         HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+        HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );  //this is the glib with the debug card
 
         int Marker_Init = (Marker_Type << 30) | (Marker_Type << 28) | (Marker_Value << 16) | (Marker_Rate << 8) | (Marker_Rate);
-        int Marker_Init_CHB = Marker_Value << 16;
+        int Marker_Init_CHB = Marker_Value;
         int Number_Channels = 0;
         string Chan[ 8 ] = {"0", "1", "2", "3", "4", "5", "6", "7"};
 
@@ -80,6 +81,10 @@ void Marker_Error( int Which_Chan, int Marker_Type, int Marker_Value, int Marker
                         ValWord < uint32_t > mem2 = hw2.getNode( Marker_Error ).read();
                         hw2.dispatch();
 
+                        hw3.getNode(Marker_Error).write( Marker_Init );
+                        ValWord < uint32_t > mem3 = hw3.getNode( Marker_Error ).read();
+                        hw3.dispatch();
+
                         hw.getNode(Marker_CHB).write( Marker_Init_CHB );
                         mem = hw.getNode( Marker_CHB ).read();
                         hw.dispatch();
@@ -87,6 +92,10 @@ void Marker_Error( int Which_Chan, int Marker_Type, int Marker_Value, int Marker
                         hw2.getNode(Marker_CHB).write( Marker_Init_CHB );
                         mem2 = hw2.getNode( Marker_CHB ).read();
                         hw2.dispatch();
+                        
+			hw3.getNode(Marker_CHB).write( Marker_Init_CHB );
+                        mem3 = hw3.getNode( Marker_CHB ).read();
+                        hw3.dispatch();
                 }
                 Number_Channels = Number_Channels >> 4;
 	}
@@ -100,6 +109,7 @@ void Delay_Time( int Delay_init ){
    	ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
   	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
   	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  	HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );  //this is the glib with the debug card
 	
 	int Delay_Reset = 0x200;
 	
@@ -110,7 +120,11 @@ void Delay_Time( int Delay_init ){
 	hw2.getNode("Delay_Signal").write( Delay_Reset );
         ValWord < uint32_t > mem2 = hw2.getNode ( "Delay_Signal" ).read();
         hw2.dispatch();
-
+	
+	hw3.getNode("Delay_Signal").write( Delay_Reset );
+        ValWord < uint32_t > mem3 = hw3.getNode ( "Delay_Signal" ).read();
+        hw3.dispatch();
+	
 	hw.getNode("Delay_Signal").write( Delay_init );
         mem = hw.getNode ( "Delay_Signal" ).read();
         hw.dispatch();
@@ -119,6 +133,10 @@ void Delay_Time( int Delay_init ){
         hw2.getNode("Delay_Signal").write( Delay_init );
         mem2 = hw2.getNode ( "Delay_Signal" ).read();
         hw2.dispatch();
+        
+	hw3.getNode("Delay_Signal").write( Delay_init );
+        mem3 = hw3.getNode ( "Delay_Signal" ).read();
+        hw3.dispatch();
 
 }
 
@@ -131,20 +149,16 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops, int Choice_Input){
   const char* cHWFile;
 
   if(Choice_Input == 0){
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay.xml");
-  cHWFile = filename.c_str();
+  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay.xml");
+  	cHWFile = filename.c_str();
   }
   else if(Choice_Input == 1){
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_TBM.xml");
-  cHWFile = filename.c_str();
-  }
-  else if(Choice_Input == 2){
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_ROC.xml");
-  cHWFile = filename.c_str();
+  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Resets.xml");
+  	cHWFile = filename.c_str();
   }
   else if(Choice_Input == 3){
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
-  cHWFile = filename.c_str();
+  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
+  	cHWFile = filename.c_str();
   }
 
     uhal::setLogLevelTo(uhal::Debug());
@@ -187,17 +201,25 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops, int Choice_Input){
   }
 
   std::vector<uint32_t> DDR;
-  std::vector<unsigned int> DDR_buff;
+  std::vector<unsigned int> DDR_Analyze;
   std::fill(DDR.begin(), DDR.end(), 0);
-  std::fill(DDR_buff.begin(), DDR_buff.end(), 0);
+  int Compare_Event_DDR = 0;
+  int Total_Events_DDR = 0;
+  int Incorrect_Event_Num_DDR = 0;
+  int Timeout_Error_DDR = 0;
+  int pixel_hit_DDR = 0;
 
   std::cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << std::endl;
   cAmc13Controller.fAmc13Interface->SendEC0();
   cAmc13Controller.fAmc13Interface->EnableBGO(0);
-  sleep(0.001);
   cAmc13Controller.fAmc13Interface->DisableBGO(0);
 
   for (int l = 0; l < Loops; l++){
+
+    if( l == 1 && Choice_Input == 1){
+	cAmc13Controller.fAmc13Interface->EnableBGO(1);
+  	cAmc13Controller.fAmc13Interface->DisableBGO(1);
+    }
 
     for (auto& cFED : cSystemController.fPixFEDVector){
 
@@ -231,10 +253,20 @@ void Test_Timeouts( int Delay1, int Delay2, int Loops, int Choice_Input){
 
     }
 
-    DDR_Event(DDR);
-
+    DDR_Analyze = DDR_Event(DDR, Compare_Event_DDR);
+    Compare_Event_DDR = DDR_Analyze[0];
+    Total_Events_DDR += DDR_Analyze[1];
+    Incorrect_Event_Num_DDR += DDR_Analyze[2];
+    Timeout_Error_DDR += DDR_Analyze[3];
+    pixel_hit_DDR += DDR_Analyze[4];
   }
- 
+  
+  std::cout << "There were " << Total_Events_DDR << " Events in DDR. " << std::endl;
+  std::cout << "There were " << Incorrect_Event_Num_DDR << " Incorrect Event numbers." << std::endl;
+  std::cout << "There were " << Timeout_Error_DDR << " timeout errors." << std::endl;
+  std::cout << "There were " << pixel_hit_DDR << " pixel hits." << std::endl;
+  std::cout << " " << std::endl; 
+
 }
 
 //Pixel alive for DDR sending the DCOL/PXL information
@@ -289,6 +321,7 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
 
   auto& cFED2 = cSystemController.fPixFEDVector[1];
   auto& cFED3 = cSystemController.fPixFEDVector[2];
+  auto& cFED4 = cSystemController.fPixFEDVector[3];
 
   std::vector<uint32_t> DDR;
   int Column[ 4199 ] = { NULL };
@@ -403,6 +436,9 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
                 cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA_new);
                 cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB_new);
 
+		cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCSA[j], Hit_infoA_new);
+                cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCSB[j], Hit_infoB_new);
+
                 ROCSA[j] = ROCSA[j].substr(0,9);
                 ROCSB[j] = ROCSB[j].substr(0,9);
 
@@ -471,8 +507,8 @@ void Test_Hits_Full_DDR(int loops_input, int col_start, int col_input, int row_s
                 pixel_hit++;
                 DCOL[ n ] = (DDR[i] >> 16) & 0x1F;
                 PXL[ n ] = (DDR[i] >> 8) & 0xFF;
-		Compare_DCOL = Hit_infoA_buff;
-                Compare_PXL = new_row;
+		Compare_DCOL = DCOL_Encode(Hit_infoA_buff);
+                Compare_PXL = PXL_Encode(new_row);
 
               /*adc_adjust = adc + Roc_num - 1;
               if ((FIFO1[i] & 0xff) != adc_adjust) {

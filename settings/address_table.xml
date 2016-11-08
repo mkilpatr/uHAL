@@ -321,6 +321,7 @@
         <node id="CMD_START_BY_PC" address="0x40010000" mask="0x00000002" />
         <node id="TRIGGER_SEL" address="0x40010000" mask="0x00000004" />
         <node id="reset_all_clocks" address="0x40010000" mask="0x00000008" />
+	<node id="sw_TTC_decod_reset" address="0x40010000" mask="0x00100000" />
         <node id="INT_TRIGGER_FREQ_SEL" address="0x40010000" mask="0x000000f0" />
         <!--<node id="INT_TRIGGER_EN" address="0x40010000" mask="0x00000100" />-->
         <node id="DDR0_end_readout" address="0x40010000" mask="0x00001000" />
@@ -420,6 +421,7 @@
                 <node id="tbm_ch_46" address="0x40010017" mask="0x00ff0000" />
                 <node id="tbm_ch_47" address="0x40010017" mask="0xff000000" />
             </node>
+	    <node id="trailer_timeout_valid" address="0x40010018" mask="0x00200000"/>
         </node>
         <node id="error_fifo_force_read" address="0x40010009" mask="0x40000000" />
         <node id="error_fifo_read_done" address="0x40010009" mask="0x80000000" />
@@ -475,6 +477,9 @@
             <node id="TBM_old_new" mask="0x80000000" />
         </node>
     </node>
+    <node id="be_ctrl_regs">
+        <node id="disable_BE" address="0x40030033" mask="0x00000001" permission="rw" />
+    </node>
     <!-- HEPHY SPY FIFOs -->
     <node id="fifo" permission="r">
         <node id="bit_stream" address="0x40040000" mode="non-incremental" size="512" />
@@ -484,5 +489,12 @@
         <node id="spy_1_B" address="0x40040004" mode="non-incremental" size="2048" />
         <node id="spy_1_A_marker" address="0x40040005" mode="non-incremental" size="2048" />
         <node id="spy_1_B_marker" address="0x40040006" mode="non-incremental" size="2048" />
+    </node>
+    <node id="TTC_HISTORY_FIFO" address="0x40100003" mode="non-incremental" size="512" permission="r" />
+    <node id="TTC_HISTORY_FIFO_read_rdy" address="0x40000022" mask="0x00000001" permission="r" />
+    <node id="TTC_HISTORY_wr_data_count" address="0x40000022" mask="0x0000fff0" permission="r" />
+    <node id="TTC_HISTORY" address="0x4001000a" permission="rw" >
+        <node id="TTC_HISTORY_FIFO_force_read" mask="0x00100000" />
+        <node id="TTC_HISTORY_FIFO_read_done" mask="0x00200000" />
     </node>
 </node>

@@ -151,7 +151,7 @@ class PixFEDFWInterface : public RegManager
      * \brief: read the contents of FIFO 1 for TBM cores A & B
      */
     std::string readFIFO1();
-    std::vector<uint32_t> readFIFO1_vec();
+    std::vector<std::vector<uint32_t>> readFIFO1_vec();
     std::vector<uint32_t> readFIFO1Marker();
     /*
      * \brief: read the OSD readback word from ROCs
@@ -168,6 +168,10 @@ class PixFEDFWInterface : public RegManager
      */
     void readErrorFIFO (bool pForce);
     std::vector<uint32_t> readErrorFIFO_vec (bool pForce);
+    /*!
+     * \brief: Read TTC History FIFO
+     */
+    std::vector<uint32_t> TTCHistoryFIFO (bool pForce);
     /*!
      * \brief Start a DAQ
      */

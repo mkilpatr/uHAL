@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
     <AMC13>
-        <connection id="T1" uri="chtcp-2.0://localhost:10203?target=192.168.1.101:50001" address_table="file://settings/AMC13XG_T1.xml" />
-        <connection id="T2" uri="chtcp-2.0://localhost:10203?target=192.168.1.100:50001" address_table="file://settings/AMC13XG_T2.xml" />
-        <AMCmask enable="3,5,11" />
+        <connection id="T1" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T1:50001" address_table="file://settings/AMC13XG_T1.xml" />
+        <connection id="T2" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T2:50001" address_table="file://settings/AMC13XG_T2.xml" />
+	<AMCmask enable="3,5,11" />
         <!--This is used to send a calibration Trigger via the AMC13s internal BGO mechanism, 0x2c is the command configured as BGO15 
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
 	     L1A which is periodic at BX500 every orbit-->

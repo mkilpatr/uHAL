@@ -4,6 +4,7 @@
 
   <!-- DUMMY UDP -->
   <connection id="GLIB.crate.slot_3" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.163:50001" address_table="file://addr_table_multi_chan.xml" />
+  <connection id="GLIB.crate.slot_9" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.169:50001" address_table="file://addr_table_multi_chan.xml" />
   <connection id="GLIB.crate.slot_11" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.171:50001" address_table="file://addr_table_multi_chan.xml" />
 </connections>
 

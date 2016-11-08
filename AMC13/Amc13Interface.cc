@@ -140,7 +140,7 @@ void Amc13Interface::DumpHistory(int pNlastEntries)
         uint32_t cBX    = cVec.at(index * 4 + 2);
         uint32_t cEvent = cVec.at(index * 4 + 3);
 
-        std::cout << "Command: " << (cCommand & 0xFF) << " - Orbit: " << cOrbit << " - BX: " << (cBX & 0x7FF) << " - Event Nr: " << (cEvent & 0x00FFFFFF) << std::endl;
+        std::cout << "Command: " << std::hex << (cCommand & 0xFF) << " - Orbit: " << cOrbit << " - BX: " << (cBX & 0x7FF) << " - Event Nr: " << (cEvent & 0x00FFFFFF) << std::endl;
     }
 }
 
@@ -219,10 +219,21 @@ void Amc13Interface::configureBGO(int pChan, uint8_t pCommand, uint16_t pBX, uin
         fAMC13->write( amc13::AMC13Simple::T1, tmp, 0);
 }
 
+int Amc13Interface::BXShifter(uint32_t shift, uint32_t bgo, uint32_t bgo_BX){
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.COMMAND", bgo);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.BX", bgo_BX);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.ENABLE_SINGLE", 1);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.BXSHIFT", 1);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.L1ADELAY", shift);
+	
+	int value = fAMC13->read(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.L1ADELAY");
+	return value;
+}
+
 void Amc13Interface::SendBGO()
 {
-    fAMC13->sendBGO();
-    //fAMC13->write(amc13::AMC13Simple::T1, "ACTION.TTC.SINGLE_COMMAND", 1);
+    //fAMC13->sendBGO();
+    fAMC13->write(amc13::AMC13Simple::T1, "ACTION.TTC.SINGLE_COMMAND", 1);
 }
 
 void Amc13Interface::enableBGO(int pChan)
@@ -265,3 +276,63 @@ void Amc13Interface::SendEC0()
     fAMC13->sendLocalEvnOrnReset(1, 0);
 }
 
+//void AMC13::setTTCHistoryEna( bool enaHist) {
+//  write( T2, "CONF.TTC_HISTORY.ENABLE", enaHist);
+//}
+//
+//void AMC13::setTTCFilterEna( bool ena) {
+//  write( T2, "CONF.TTC_HISTORY.FILTER", ena);
+//}
+//
+//void AMC13::setTTCHistoryFilter( int n, uint32_t filterVal) {
+//  if( n < 0 || n > 15) {
+//    amc13::Exception::UnexpectedRange e;
+//    e.Append( "TTC history filter number must be in range 0-15");
+//    throw e;
+//  }
+//  uint32_t adr = getT2()->getNode("CONF.TTC_HISTORY.FILTER_LIST").getAddress() + n;
+//  write( T2, adr, filterVal);
+//}
+//
+//uint32_t AMC13::getTTCHistoryFilter( int n) {
+//  if( n < 0 || n > 15) {
+//    amc13::Exception::UnexpectedRange e;
+//    e.Append( "TTC history filter number must be in range 0-15");
+//    throw e;
+//  }
+//  uint32_t adr = getT2()->getNode("CONF.TTC_HISTORY.FILTER_LIST").getAddress() + n;
+//  return( read( T2, adr));
+//}
+//
+//void AMC13::clearTTCHistoryFilter() {
+//  writeMask( T2, "ACTION.RESETS.TTC_FILTER_LIST");
+//}
+//
+//void AMC13::clearTTCHistory() {
+//  writeMask( T2, "ACTION.RESETS.TTC_COMMAND_HISTORY");
+//}
+//
+//int AMC13::getTTCHistoryCount() {
+//  if( read( T2, "STATUS.TTC_HISTORY.FULL"))
+//    return( 512);
+//  return( read( T2, "STATUS.TTC_HISTORY.COUNT"));
+//}
+//
+//std::vector<uint32_t> AMC13::getTTCHistory( int nreq) {
+//  std::vector<uint32_t> hist;
+//  write( T2, "CONF.TTC_HISTORY.ENABLE", 0); // disable history capture
+//  uint32_t base = getT2()->getNode("STATUS.TTC_HISTORY.BUFFER.BASE").getAddress();
+//  int nhist = getTTCHistoryCount();         // get current count
+//  if( nreq < 0 || nreq > nhist) {           // check range
+//    amc13::Exception::UnexpectedRange e;
+//    e.Append( "TTC history filter request count out of range");
+//    throw e;
+//  }
+//  uint32_t adr = getTTCHistoryItemAddress( -nreq);
+//  for( int i=0; i<nreq; i++) {
+//    for( int k=0; k<4; k++)
+//      hist.push_back( read( T2, adr+k));
+//    adr = base + ((adr + 4) % 0x800);
+//  }
+//  return hist;
+//}

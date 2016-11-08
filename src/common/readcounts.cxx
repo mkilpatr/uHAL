@@ -38,10 +38,10 @@ int main() {
   HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
 
   
-  hw.getNode( "CHA_ROC2_0" ).write(255);
-  ValWord< uint32_t > mem = hw.getNode ( "CHA_ROC2_0" ).read();
+  hw.getNode( "CHA_ROC0_0" ).write(255);
+  ValWord< uint32_t > mem = hw.getNode ( "CHA_ROC0_0" ).read();
   hw.dispatch();
-  std::cout << "CHA_ROC2_1 = " << std::hex << mem.value() << std::endl;
+  std::cout << "CHA_ROC0_0 = " << std::hex << mem.value() << std::endl;
 
   ValWord< uint32_t > mem2 = hw2.getNode ( "L1A_count" ).read();
   hw2.dispatch();

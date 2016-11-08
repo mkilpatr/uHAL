@@ -472,7 +472,9 @@
             <node id="COMMAND" address="0x00000020" permission="rw" description="Short or long TTC command for BGO channel 0" parameters="Table=TTC_BGO;Row=Command;Column=BGO0;Status=1;Show=nz"/>
             <node id="ENABLE" address="0x00000024" permission="rw" description="Enable BGO channel 0" parameters="Table=TTC_BGO;Row=Enable;Column=BGO0;Status=1;Show=nz" mask="0x20000000"/>
             <node id="ENABLE_SINGLE" address="0x00000024" permission="rw" description="'1' for single command only" parameters="Table=TTC_BGO;Row=Single;Column=BGO0;Status=1;Show=nz" mask="0x40000000"/>
-            <node id="LONG_CMD" address="0x00000024" permission="rw" description="'1' for long command on BGO channel 0" parameters="Table=TTC_BGO;Row=Long_Command;Column=BGO0;Status=1;Show=nz" mask="0x10000000"/>
+            <node id="BXSHIFT" address="0x00000024" permission="rw" description="Enable the L1A delay for BGO BX" mask="0x80000000" />
+            <node id="L1ADELAY" address="0x0000002e" permission="rw" description="Number of BX to delay L1A" mask="0x00000fff" />
+	    <node id="LONG_CMD" address="0x00000024" permission="rw" description="'1' for long command on BGO channel 0" parameters="Table=TTC_BGO;Row=Long_Command;Column=BGO0;Status=1;Show=nz" mask="0x10000000"/>
             <node id="ORBIT_PRESCALE" address="0x00000024" permission="rw" description="Orbit prescale-1 for BGO channel 0" parameters="Table=TTC_BGO;Row=Orbit_Prescale;Column=BGO0;Status=1;Show=nz" mask="0x0000ffff"/>
          </node>
          <node id="BGO1">

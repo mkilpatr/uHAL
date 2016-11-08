@@ -29,6 +29,7 @@ public:
     void BurstL1A();
 
     void SendBGO();
+    int  BXShifter(uint32_t shift, uint32_t bgo, uint32_t bgo_BX);
     void EnableBGO(int pChan);
     void DisableBGO(int pChan);
     void SendEC0(); 

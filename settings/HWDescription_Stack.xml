@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
     <AMC13>
-        <connection id="T1" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.101:50001" address_table="file://settings/AMC13XG_T1.xml" />
-        <connection id="T2" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.100:50001" address_table="file://settings/AMC13XG_T2.xml" />
-        <AMCmask enable="3,5,11" />
+        <connection id="T1" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T1:50001" address_table="file://settings/AMC13XG_T1.xml" />
+        <connection id="T2" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T2:50001" address_table="file://settings/AMC13XG_T2.xml" />
+	<AMCmask enable="3,5,9,11" />
         <!--This is used to send a calibration Trigger via the AMC13s internal BGO mechanism, 0x2c is the command configured as BGO15 
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
@@ -43,8 +43,8 @@
         <Register name="pixfed_ctrl_regs.slink_ctrl.slinkFormatH_Evt_stat">0xf</Register>
 
         <!-- TBM MASK -->
-        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFF00FF00</Register>
-        <Register name="pixfed_ctrl_regs.TBM_MASK_2">0x0000FFFF</Register>
+        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0x00000000</Register>
+        <Register name="pixfed_ctrl_regs.TBM_MASK_2">0x00000000</Register>
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask">0x00</Register>
         <!--<Register name="pixfed_ctrl_regs.PACKET_NB">10</Register>-->
 
@@ -72,7 +72,7 @@
 
         <!-- FITELS -->
         <Fitel_Files path="./settings/" />
-        <Fitel FMC="0" Id="0" file="FMCFITEL.txt" Enable="" />
+        <Fitel FMC="0" Id="0" file="FMCFITEL.txt" Enable="1" />
         <Fitel FMC="0" Id="1" file="FMCFITEL.txt" Enable="1" />
     </PixFED>
     <PixFED Id="1" boardType="CTA">
@@ -80,6 +80,9 @@
     </PixFED>
     <PixFED Id="2" boardType="CTA">
         <connection id="board2" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.171:50001" address_table="file://test/addr_table_multi_chan.xml" />
+    </PixFED>
+    <PixFED Id="3" boardType="CTA">
+        <connection id="board3" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.169:50001" address_table="file://test/addr_table_multi_chan.xml" />
     </PixFED>
 </HwDescription>
 

@@ -182,7 +182,7 @@ class PixFEDInterface
      * \return string of the FIFO1 console dump
      */
     std::string readFIFO1 ( const PixFED* pFED );
-    std::vector<uint32_t> readFIFO1_vec( const PixFED* pFED );
+    std::vector<std::vector<uint32_t>> readFIFO1_vec( const PixFED* pFED );
     std::vector<uint32_t> readFIFO1Marker( const PixFED* pFED);
     /*!
      * \brief: read ROC OSD readback word
@@ -200,6 +200,10 @@ class PixFEDInterface
      */
     void readErrorFIFO (const PixFED* pFED, bool pForce);
     std::vector<uint32_t> readErrorFIFO_vec(const PixFED* pFED, bool pForce);
+    /*!
+     * \brief: read the TTC History FIFO
+     */
+    std::vector<uint32_t> TTCHistoryFIFO(const PixFED* pFED, bool pForce);
     /*!
      * \brief Start a DAQ
      * \param pFED

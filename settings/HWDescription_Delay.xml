@@ -1,31 +1,31 @@
 <?xml version='1.0' encoding='utf-8'?>
 <HwDescription>
     <AMC13>
-        <connection id="T1" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.101:50001" address_table="file://settings/AMC13XG_T1.xml" />
-        <connection id="T2" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.100:50001" address_table="file://settings/AMC13XG_T2.xml" />
-        <AMCmask enable="3,5,11" />
+        <connection id="T1" uri="chtcp-2.0://cmsuppixpc001:10203?target=fedamc13T1:50001" address_table="file://settings/AMC13XG_T1.xml" />
+        <connection id="T2" uri="chtcp-2.0://cmsuppixpc001:10203?target=fedamc13T2:50001" address_table="file://settings/AMC13XG_T2.xml" />
+        <AMCmask enable="1,3,9,11" />
         <!--This is used to send a calibration Trigger via the AMC13s internal BGO mechanism, 0x2c is the command configured as BGO15 
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
         <!-- for the DEV lab setup in B186, the bx has to be 381 for the BU clock source and 380 for the TTCci as clock source -->
-        <BGO command="0x14" repeat="1" prescale="0" bx="381" />  <!-- CAL-SYNC-Reset -->
+        <BGO command="0x14" repeat="0" prescale="330000" bx="381" />  <!-- CAL-SYNC-Reset -->
         <!--BGO command="0x14" repeat="0" prescale="0" bx="481" /-->
 	<!--<BGO command="0x2e" repeat="0" prescale="0" bx="0" />-->
         <!-- Local enables Local L1A, mode 0 means a trigger every orbit at BX500, rate is 1 for every orbit and burst is 1 
              for 1 trigger when sending burst (equivalent to single trigger -->
-        <Trigger local="0" mode="1" rate="50" burst="4" rules="0" /> 
+        <Trigger local="1" mode="2" rate="1" burst="10" rules="0" /> 
         <!--<Register tounge="T1" name="test.test">0</Register>-->
-        <TTCSimulator>0</TTCSimulator>
+        <TTCSimulator>1</TTCSimulator>
     </AMC13>
     <PixFED Id="0" boardType="CTA">
-        <connection id="board0" uri="chtcp-2.0://cmsuppixch:10203?target=fedtestfed:50001" address_table="file://settings/address_table.xml" />
+        <connection id="board0" uri="chtcp-2.0://cmsuppixch:10203?target=fedtestfed5:50001" address_table="file://settings/address_table.xml" />
 
         <!-- ACQUISITION MODE & CALIBRATION MODE & DATA TYPE -->
         <!--1: TBM fifo, 2: Slink FIFO, 4: FEROL-->
-        <Register name="pixfed_ctrl_regs.acq_ctrl.acq_mode">2</Register>
-        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode">1 </Register>
+        <Register name="pixfed_ctrl_regs.acq_ctrl.acq_mode">4</Register>
+        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode">0 </Register>
         <!--this is 0-indexed so 9 will correspond to 10 events-->
-        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">3</Register>
+        <Register name="pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents">0</Register>
         <!--0: real data, 1: constants after TBM fifo, 2: pattern before TBM fifo-->
         <Register name="pixfed_ctrl_regs.data_type">0</Register>
         <!-- 0 indexed -->
@@ -43,7 +43,7 @@
         <Register name="pixfed_ctrl_regs.slink_ctrl.slinkFormatH_Evt_stat">0xf</Register>
 
         <!-- TBM MASK -->
-        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFF00FF00</Register>
+        <Register name="pixfed_ctrl_regs.TBM_MASK_1">0xFF000CC0</Register>
         <Register name="pixfed_ctrl_regs.TBM_MASK_2">0x0000FFFF</Register>
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask">0x00</Register>
         <!--<Register name="pixfed_ctrl_regs.PACKET_NB">10</Register>-->
@@ -51,10 +51,10 @@
         <!--TTS CONFIG-->
         <Register name="pixfed_ctrl_regs.tts.timeout_check_valid"> 1 </Register>
         <Register name="pixfed_ctrl_regs.tts.event_cnt_check_valid"> 1 </Register>
-        <Register name="pixfed_ctrl_regs.tts.evt_timeout_value.tbm_ch_00"> 100 </Register>
+        <Register name="pixfed_ctrl_regs.tts.evt_timeout_value.tbm_ch_00"> 255 </Register>
         <!--<Register name="pixfed_ctrl_regs.tts.evt_timeout_value.tbm_ch_00"> 255 </Register>-->
         <!--<Register name="pixfed_ctrl_regs.tts.evt_timeout_value.tbm_ch_01"> 255 </Register>-->
-        <Register name="pixfed_ctrl_regs.tts.evt_err_nb_oos_thresh"> 2</Register>
+        <Register name="pixfed_ctrl_regs.tts.evt_err_nb_oos_thresh"> 255</Register>
         <Register name="pixfed_ctrl_regs.tts.timeout_nb_oos_thresh"> 255 </Register>
         <Register name="pixfed_ctrl_regs.tts.bc0_ec0_polar"> 0 </Register>
         <Register name="pixfed_ctrl_regs.tts.force_RDY"> 0 </Register>
@@ -75,6 +75,15 @@
         <Fitel FMC="0" Id="0" file="FMCFITEL.txt" Enable="" />
         <Fitel FMC="0" Id="1" file="FMCFITEL.txt" Enable="1" />
     </PixFED>
+    <!--PixFED Id="1" boardType="CTA">
+        <connection id="board1" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.163:50001" address_table="file://test/addr_table_multi_chan.xml" />
+    </PixFED>
+    <PixFED Id="2" boardType="CTA">
+        <connection id="board2" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.171:50001" address_table="file://test/addr_table_multi_chan.xml" />
+    </PixFED>
+    <PixFED Id="3" boardType="CTA">
+        <connection id="board3" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.169:50001" address_table="file://test/addr_table_multi_chan.xml" />
+    </PixFED-->
 </HwDescription>
 
 <Settings>

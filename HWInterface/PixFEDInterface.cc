@@ -504,7 +504,7 @@ std::string PixFEDInterface::readFIFO1 ( const PixFED* pFED )
     return fFEDFW->readFIFO1();
 }
 
-std::vector<uint32_t> PixFEDInterface::readFIFO1_vec( const PixFED* pFED )
+std::vector<std::vector<uint32_t>> PixFEDInterface::readFIFO1_vec( const PixFED* pFED )
 {
     setBoard ( pFED->getBeId() );
     return fFEDFW->readFIFO1_vec();
@@ -535,6 +535,12 @@ void PixFEDInterface::readErrorFIFO (const PixFED* pFED, bool pForce)
 }
 
 std::vector<uint32_t> PixFEDInterface::readErrorFIFO_vec (const PixFED* pFED, bool pForce)
+{
+    setBoard (pFED->getBeId() );
+    return fFEDFW->readErrorFIFO_vec (pForce);
+}
+
+std::vector<uint32_t> PixFEDInterface::TTCHistoryFIFO (const PixFED* pFED, bool pForce)
 {
     setBoard (pFED->getBeId() );
     return fFEDFW->readErrorFIFO_vec (pForce);
