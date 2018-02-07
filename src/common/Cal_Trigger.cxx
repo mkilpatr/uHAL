@@ -33,10 +33,10 @@ int main( int argc, char* argv[] ) {
   //h1.GetXaxis().SetTitle("Number of Bunches");
   //h1.GetYaxis().SetTitle("Count");
 
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_9" );
+  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_11" );
 
   if(argc == 1) {
 	std::cout << "CSR_Mode is enabled by 0x100, disabled by 0x000" << std::endl;

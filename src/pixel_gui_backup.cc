@@ -40,8 +40,8 @@ int main()
   using namespace uhal;
  
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   std::cout << "    ******************************************    " << std::endl;
   std::cout << "    *                                        *    " << std::endl;
@@ -314,9 +314,9 @@ void Set_ROCS(int roc_input)
 
   uint32_t Number_ROCS = 0x88;
   uint32_t inter_num;  
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   uint32_t ROC_Clk = 0x9898;  //Puts a value of 160 clk cycles in channel A & B
 
@@ -360,9 +360,9 @@ void Set_ROCS(int roc_input)
 void Set_Num_Hits(int hit_input)
 {
   using namespace uhal;
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   uint32_t Hits = 0x00000000;
   uint32_t inter_hits[8];
@@ -414,8 +414,8 @@ int Write_ROCs(int i, int Hit_infoA, int Hit_infoB){
 	using namespace std;
 	using namespace uhal;
 	ConnectionManager manager ("file://test/dummy_connections.xml");
-	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 	
 	string ROCSA[ 8 ] = {"CHA_ROC0", "CHA_ROC1", "CHA_ROC2", "CHA_ROC3", "CHA_ROC4", "CHA_ROC5", "CHA_ROC6", "CHA_ROC7"};
 	string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
@@ -446,8 +446,8 @@ void Scan_Pixels()
   using namespace std;
   using namespace uhal;
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   int j,k,i;
   int Max_Column = 0;
@@ -500,8 +500,8 @@ void Scan_ADC(int increment)
   using namespace uhal;
   using namespace std;
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   int i,j;
   int min_adc = 0;
@@ -543,9 +543,9 @@ void PKAM_Enable( int PKAM_init ){
   
   using namespace uhal;
   using namespace std;
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   uint32_t PKAM_Value = 0x05;
   uint32_t PKAM_Constant = 0x14;
@@ -599,8 +599,8 @@ int Set_Cal(uint32_t cal_input) {
   using namespace uhal;
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   ValWord < uint32_t > mem,mem2;
 
@@ -642,7 +642,7 @@ int Set_Cal(uint32_t cal_input) {
   }
   else if (cal_choice == 2) {
     //Run Sync mode test
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+    std::string filename ("settings/HWDescription.xml");
     const char* cHWFile = filename.c_str();
   
     uhal::setLogLevelTo(uhal::Debug());
@@ -749,7 +749,7 @@ int Set_Cal(uint32_t cal_input) {
   else if (cal_choice == 3) {
     //Run Reset mode test
   
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+    std::string filename ("settings/HWDescription.xml");
     const char* cHWFile = filename.c_str();
   
     uhal::setLogLevelTo(uhal::Debug());
@@ -878,15 +878,15 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   const char* cHWFile;
 
   if (choice_input == 0) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+    std::string filename ("settings/HWDescription.xml");
     cHWFile = filename.c_str();
   }
   else if (choice_input == 1) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack.xml");
+    std::string filename ("settings/HWDescription_Stack.xml");
     cHWFile = filename.c_str();
   }
   else if (choice_input == 2) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack2.xml");
+    std::string filename ("settings/HWDescription_Stack2.xml");
     cHWFile = filename.c_str();
   }
 
@@ -1439,19 +1439,19 @@ int Test_Hits_Resets( int test_input )
   if ( test_input == 0) {
     //std::cout << "Testing normal event." << std::endl;
     //sleep(2);
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
+    std::string filename ("settings/HWDescription_PKAM.xml");
     cHWFile = filename.c_str();
   }
   else if ( test_input == 1) {
     //std::cout << "Testing TBM Reset." << std::endl;
     //sleep(2);
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_TBM.xml");
+    std::string filename ("settings/HWDescription_TBM.xml");
     cHWFile = filename.c_str();
   }
   else if ( test_input == 2) {
     //std::cout << "Testing ROC Reset." << std::endl;
     //sleep(2);
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_ROC.xml");
+    std::string filename ("settings/HWDescription_ROC.xml");
     cHWFile = filename.c_str();
   }
   else if ( test_input >= 3) {
@@ -1772,7 +1772,7 @@ void Test_Phases (int fiber_input, int time_input)
 {
 
   const char* cHWFile;
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+  std::string filename ("settings/HWDescription.xml");
   cHWFile = filename.c_str();
 
   uhal::setLogLevelTo(uhal::Debug());
@@ -1843,15 +1843,15 @@ void Stack_Test (int loops_input, int choice_input)
   const char* cHWFile;
 
   if (choice_input == 0) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+    std::string filename ("settings/HWDescription.xml");
     cHWFile = filename.c_str();
   }
   else if (choice_input == 1) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack.xml");
+    std::string filename ("settings/HWDescription_Stack.xml");
     cHWFile = filename.c_str();
   }
   else if (choice_input == 2) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack2.xml");
+    std::string filename ("settings/HWDescription_Stack2.xml");
     cHWFile = filename.c_str();
   }
 

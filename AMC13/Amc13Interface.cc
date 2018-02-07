@@ -78,6 +78,12 @@ void Amc13Interface::ConfigureAmc13()
     for (auto& cReg : fDescription->fT2map)
         fAMC13->write(amc13::AMC13Simple::T2, cReg.first, cReg.second);
 
+    fAMC13->write(amc13::AMC13Simple::T1,"CONF.AMC.TTS_MASK",1);
+    fAMC13->write(amc13::AMC13Simple::T2,"CONF.TTC.OVERRIDE_MASK",0x700);
+    //Ignore Daq Data is the same as TTS Mask
+    //fAMC13->write (amc13::AMC13Simple::T1, "CONF.AMC.IGNORE_DAQ_DATA", 1);
+    //fAMC13->write(amc13::AMC13Simple::T1,"CONF.DIAG.FAKE_TTC_ENABLE",0);
+
     std::cout << GREEN << "AMC13 successfully configured!" << RESET << std::endl;
 }
 
@@ -92,12 +98,23 @@ void Amc13Interface::StopL1A()
     fAMC13->stopContinuousL1A();
 }
 
+void Amc13Interface::SendNumL1A( int L1A )
+{
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.LOCAL_TRIG.NUM_TRIG", L1A);
+	fAMC13->write(amc13::AMC13Simple::T1, "ACTION.LOCAL_TRIG.SEND_BURST", 1);
+}
+
 void Amc13Interface::BurstL1A()
 {
     fAMC13->sendL1ABurst();
 }
 
 void Amc13Interface::EnableBGO(int pChan)
+{
+    this->enableBGO( pChan );
+}
+
+void Amc13Interface::EnableSingleBGO(int pChan)
 {
     this->enableBGO( pChan );
 }
@@ -222,8 +239,8 @@ void Amc13Interface::configureBGO(int pChan, uint8_t pCommand, uint16_t pBX, uin
 int Amc13Interface::BXShifter(uint32_t shift, uint32_t bgo, uint32_t bgo_BX){
 	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.COMMAND", bgo);
 	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.BX", bgo_BX);
-	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.ENABLE_SINGLE", 1);
-	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.BXSHIFT", 1);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.ENABLE_SINGLE", 0);
+	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.BXSHIFT", 0);
 	fAMC13->write(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.L1ADELAY", shift);
 	
 	int value = fAMC13->read(amc13::AMC13Simple::T1, "CONF.TTC.BGO0.L1ADELAY");
@@ -234,6 +251,19 @@ void Amc13Interface::SendBGO()
 {
     //fAMC13->sendBGO();
     fAMC13->write(amc13::AMC13Simple::T1, "ACTION.TTC.SINGLE_COMMAND", 1);
+}
+
+void Amc13Interface::DisableFakeData(){
+    fAMC13->write(amc13::AMC13Simple::T1,"CONF.LOCAL_TRIG.FAKE_DATA_ENABLE", 0);
+}
+
+void Amc13Interface::EnableMaskFEDSlot( int slot ){
+    uint32_t slots = 0x700 | (1 << (slot - 1));
+    fAMC13->write(amc13::AMC13Simple::T2, "CONF.TTC.OVERRIDE_MASK", slots);
+}
+
+void Amc13Interface::DisableMaskFEDSlot(){
+    fAMC13->write(amc13::AMC13Simple::T2, "CONF.TTC.OVERRIDE_MASK", 0x700);
 }
 
 void Amc13Interface::enableBGO(int pChan)
@@ -254,7 +284,7 @@ void Amc13Interface::enableBGO(int pChan)
     fAMC13->write( amc13::AMC13Simple::T1, "CONF.TTC.ENABLE_BGO", 1);
 }
 
-void Amc13Interface::disableBGO(int pChan)
+void Amc13Interface::enableSingleBGO(int pChan)
 {
     char tmp[32];
 
@@ -267,6 +297,31 @@ void Amc13Interface::disableBGO(int pChan)
 
     snprintf( tmp, sizeof(tmp), "CONF.TTC.BGO%d.%s", pChan, "ENABLE");
     fAMC13->write( amc13::AMC13Simple::T1, tmp, 0);
+
+    snprintf( tmp, sizeof(tmp), "CONF.TTC.BGO%d.%s", pChan, "ENABLE_SINGLE");
+    fAMC13->write( amc13::AMC13Simple::T1, tmp, 1);
+
+    // Edit by Georg Auzinger, not in official AMC13 SW package but required
+    fAMC13->write( amc13::AMC13Simple::T1, "CONF.TTC.ENABLE_BGO", 1);
+}
+
+void Amc13Interface::disableBGO(int pChan)
+{
+    char tmp[32];
+    char tmp_single[32];
+
+    if ( pChan < 0 || pChan > 3)
+    {
+        amc13::Exception::UnexpectedRange e;
+        e.Append("AMC13::enableBGO() - channel must be in range 0 to 3");
+        throw e;
+    }
+
+    snprintf( tmp, sizeof(tmp), "CONF.TTC.BGO%d.%s", pChan, "ENABLE");
+    fAMC13->write( amc13::AMC13Simple::T1, tmp, 0);
+    // Edit by Matt Kilpatrick, disable single BGO command
+    snprintf( tmp_single, sizeof(tmp_single), "CONF.TTC.BGO%d.%s", pChan, "ENABLE_SINGLE");
+    if(pChan == 1) fAMC13->write( amc13::AMC13Simple::T1, tmp_single, 0);
     // Edit by Georg Auzinger, not in official AMC13 SW package but required
     fAMC13->write( amc13::AMC13Simple::T1, "CONF.TTC.ENABLE_BGO", 0);
 }

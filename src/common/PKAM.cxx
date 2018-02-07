@@ -34,8 +34,8 @@ int main() {
   //h1.GetYaxis().SetTitle("Count");
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_9" );
 
   
   hw.getNode( "PKAM_Reset" ).write(0x14140000);

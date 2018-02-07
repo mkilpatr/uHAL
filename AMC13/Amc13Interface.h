@@ -26,11 +26,16 @@ public:
     // Start / Stop L1A
     void StartL1A();
     void StopL1A();
+    void SendNumL1A( int L1A );
     void BurstL1A();
+    void DisableFakeData();
 
     void SendBGO();
     int  BXShifter(uint32_t shift, uint32_t bgo, uint32_t bgo_BX);
+    void EnableMaskFEDSlot( int slot );
+    void DisableMaskFEDSlot();
     void EnableBGO(int pChan);
+    void EnableSingleBGO(int pChan);
     void DisableBGO(int pChan);
     void SendEC0(); 
 
@@ -49,6 +54,7 @@ private:
         pRegValue ^= ( -pValue ^ pRegValue ) & ( 1 << pPos - 1 );
     }
     void enableBGO(int pChan);
+    void enableSingleBGO(int pChan);
     void disableBGO(int pChan);
     void configureBGO(int pChan, uint8_t pCommand, uint16_t pBX, uint16_t pPrescale, bool pRepeat);
 };

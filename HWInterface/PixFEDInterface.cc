@@ -473,6 +473,12 @@ void PixFEDInterface::findPhases2 ( const PixFED* pFED, uint32_t pScopeFIFOCh)
     fFEDFW->findPhases2 (pScopeFIFOCh);
 }
 
+std::vector<uint32_t> PixFEDInterface::OOSTimeout (const PixFED* pFED)
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->OOSTimeout();
+}
+
 void PixFEDInterface::monitorPhases (const PixFED* pFED, uint32_t pScopeFIFOCh)
 {
     setBoard ( pFED->getBeId() );
@@ -528,10 +534,22 @@ uint8_t PixFEDInterface::readTTSState (const PixFED* pFED)
     return fFEDFW->readTTSState();
 }
 
+uint8_t PixFEDInterface::readTTSStateNoPrint (const PixFED* pFED)
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->readTTSStateNoPrint();
+}
+
 void PixFEDInterface::readErrorFIFO (const PixFED* pFED, bool pForce)
 {
     setBoard (pFED->getBeId() );
     fFEDFW->readErrorFIFO (pForce);
+}
+
+void PixFEDInterface::readErrorFIFO2 (const PixFED* pFED, bool pForce)
+{
+    setBoard (pFED->getBeId() );
+    fFEDFW->readErrorFIFO2 (pForce);
 }
 
 std::vector<uint32_t> PixFEDInterface::readErrorFIFO_vec (const PixFED* pFED, bool pForce)
@@ -543,7 +561,7 @@ std::vector<uint32_t> PixFEDInterface::readErrorFIFO_vec (const PixFED* pFED, bo
 std::vector<uint32_t> PixFEDInterface::TTCHistoryFIFO (const PixFED* pFED, bool pForce)
 {
     setBoard (pFED->getBeId() );
-    return fFEDFW->readErrorFIFO_vec (pForce);
+    return fFEDFW->TTCHistoryFIFO (pForce);
 }
 
 //////////////
@@ -577,6 +595,113 @@ void PixFEDInterface::Resume ( PixFED* pFED )
     fFEDFW->Resume();
 }
 
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::RegDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->RegDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::EventErrorDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->EventErrorDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::EventTimeoutDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->EventTimeoutDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::EventResyncAheadDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->EventResyncAheadDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::TBMHeaderIDErrorDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->TBMHeaderIDErrorDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::TBMTrailerIDErrorDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->TBMTrailerIDErrorDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::OOSCountErrorDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->OOSCountErrorDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::PacketCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->PacketCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::TrailerCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->TrailerCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::ENECountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->ENECountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::TOCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->TOCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::PKAMCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->PKAMCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::NTPCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->NTPCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::ROC_NBR_ERRCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->ROC_NBR_ERRCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::OVFCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->OVFCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::AUTORESETCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->AUTORESETCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::GLIBHeaderCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->GLIBHeaderCountDump ( pFED, pBlockSize );
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDInterface::GLIBTrailerCountDump ( PixFED* pFED, uint32_t pBlockSize )
+{
+    setBoard ( pFED->getBeId() );
+    return fFEDFW->GLIBTrailerCountDump ( pFED, pBlockSize );
+}
 
 std::vector<uint32_t> PixFEDInterface::ReadData ( PixFED* pFED, uint32_t pBlockSize )
 {

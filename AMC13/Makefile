@@ -23,7 +23,7 @@ endif
 .PHONY: clean print
 
 %.o: %.cc %.h
-	$(CXX) -std=c++0x  $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) $(ExternalObjects) -c -o $@ $<
+	$(CXX) -std=c++0x $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) $(ExternalObjects) -c -o $@ $<
 
 all:print $(Objs) 
 	$(CC) -std=c++0x -shared -o libPh1_Amc13.so $(Objs)

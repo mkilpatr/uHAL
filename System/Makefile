@@ -15,7 +15,7 @@ LibraryPaths = $(LibraryDirs:%=-L%)
 LIBPATH=../lib/libPh1_Amc13.so
 
 #ifneq ("$(wildcard $(LIBPATH))","")
-ExternalObjects += $(LibraryPaths) -lPh1_Interface -lPh1_Description -lPh1_Amc13
+ExternalObjects += $(LibraryPaths) -lPh1_GLIB_Interface -lPh1_GLIB_Description -lPh1_Interface -lPh1_Description -lPh1_Amc13
 #@echo yes
 #else
 #@echo no

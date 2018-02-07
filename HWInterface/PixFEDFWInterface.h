@@ -133,6 +133,9 @@ class PixFEDFWInterface : public RegManager
     /*!
      * \brief: find correct phases for incoming data stream
      */
+    std::vector<uint32_t> OOSTimeout();
+    //readout of the OOS status for each channel
+    //
     void monitorPhases (uint32_t pScopeFIFOCh = 0);
     /*!
      * \brief: initialize Slink to send data
@@ -163,10 +166,12 @@ class PixFEDFWInterface : public RegManager
      * \brief: Read the TTS State
      */
     uint8_t readTTSState();
+    uint8_t readTTSStateNoPrint();
     /*!
      * \brief: read the Error FIFO
      */
     void readErrorFIFO (bool pForce);
+    void readErrorFIFO2 (bool pForce);
     std::vector<uint32_t> readErrorFIFO_vec (bool pForce);
     /*!
      * \brief: Read TTC History FIFO
@@ -189,6 +194,25 @@ class PixFEDFWInterface : public RegManager
      * \brief Resume a DAQ
      */
     void Resume();
+
+    std::vector<std::pair<std::string, uint32_t> > RegDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > EventErrorDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > EventTimeoutDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > EventResyncAheadDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > TBMHeaderIDErrorDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > TBMTrailerIDErrorDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > OOSCountErrorDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > PacketCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > TrailerCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > ENECountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > TOCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > PKAMCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > NTPCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > ROC_NBR_ERRCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > OVFCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > AUTORESETCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > GLIBHeaderCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
+    std::vector<std::pair<std::string, uint32_t> > GLIBTrailerCountDump( PixFED* pPixFED, uint32_t pBlockSize = 0);
     /*!
      * \brief Read data from DAQ
      * \param pPixFED
@@ -278,8 +302,9 @@ class PixFEDFWInterface : public RegManager
     void prettyprintTBMFIFO (const std::vector<uint32_t>& pData);
     void prettyprintSlink (const std::vector<uint64_t>& pData);
     void prettyprintPhase ( const std::vector<uint32_t>& pData, int pChannel );
+    void prettyprintPhase ( const std::vector<uint32_t>& pData, int pChannel, int mChannel);
     void decode_symbols (const std::vector<uint32_t>& pInData, std::vector<uint8_t>& p5bSymbol, std::vector<uint8_t>& p5bNRZI, std::vector<uint8_t>& p4bNRZI);
-    void prettypPrintErrors (const uint32_t& cWord);
+    int prettypPrintErrors (const uint32_t& cWord, int ENE);
     void prettypPrintErrors_test (const uint32_t& cWord);
 
     // FPGA CONFIG METHODS

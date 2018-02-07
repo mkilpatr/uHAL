@@ -34,7 +34,7 @@ int main() {
   //h1.GetYaxis().SetTitle("Count");
 
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
 
   ValWord< uint32_t > mem = hw.getNode ( "L1A_count" ).read();
   hw.dispatch();

@@ -22,18 +22,18 @@ export CACTUSINCLUDE=/opt/cactus/include
 export BOOST_LIB=/opt/cactus/lib
 export BOOST_INCLUDE=/opt/cactus/include
 
+#PYTHON Path
+export PYTHONPATH=/home/fectest/FEDtester/MrPixel/build/ttctest/pychips_files/src
+
 #FED Burnin
 export BASE_DIR=$(pwd)
+export BUILD_HOME=$(pwd)
 
 export PATH=$BASE_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$CACTUSLIB:$BASE_DIR/lib:${LD_LIBRARY_PATH}:/opt/root_v5.34.14.source/lib
 #export PATH=/usr/bin:/usr/local/bin:~/bin:${CACTUSBIN}:${AMC13BIN}:$PATH
 export PATH=${CACTUSBIN}:${AMC13BIN}:$PATH
 export ROOTSYS=/opt/root_v5.34.14.source
-
-cd ../../Desktop/amc13
-source env.sh
-cd -
 
 export AMC13_STANDALONE_ROOT CACTUS_ROOT PATH LD_LIBRARY_PATH PYTHONPATH
 

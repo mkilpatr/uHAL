@@ -30,6 +30,7 @@
    </node>
    <node id="CONF">
       <node id="AMC">
+	 <node id="TTS_MASK" address="0x00000003" permission="rw" description="Enalbe TTS Mask for FED" mask="0x80000000" />
          <node id="BC0_COMPENSATION" address="0x00000006" permission="rw" description="AMC set BC0 compensation, default to 0x18" parameters="Table=1_Config;Row=AMC_Links;Column=BC0_Offset;Status=0" mask="0x0000001f"/>
          <node id="ENABLE_MASK" address="0x00000003" permission="rw" description="'1' enables AMC1..12" parameters="Table=1_Config;Row=AMC_Links;Column=Enable_Mask;Status=0" mask="0x00000fff"/>
          <node id="FAKE_DATA_SIZE" address="0x00000018" permission="rw" description="scale factor( = contents + 1). Note: if bit 18 is set to '1', these bits are ignored." parameters="Table=1_Config;Row=AMC_Links;Column=Fake_size;Status=0" mask="0x0003ffff"/>

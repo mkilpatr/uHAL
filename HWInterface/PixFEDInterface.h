@@ -161,6 +161,8 @@ class PixFEDInterface
      * \brief: find Phases for input data stream
      * \param: pScopeFIFOCh: channel for Phase Stability monitoring
      */
+    std::vector<uint32_t> OOSTimeout ( const PixFED* pFED );
+    //block readout of OOS timeout status
     void monitorPhases ( const PixFED* pFED, uint32_t pScopeFIFOCh = 0 );
     /*!
      * \brief: read transparent Fifo
@@ -194,11 +196,13 @@ class PixFEDInterface
     uint32_t readOSDWord (const PixFED* pFED, uint32_t pROCId, uint32_t pChannelOfInterest);
 
     uint8_t readTTSState ( const PixFED* pFED );
+    uint8_t readTTSStateNoPrint ( const PixFED* pFED );
 
     /*
      * \brief: read the Error FIFO
      */
     void readErrorFIFO (const PixFED* pFED, bool pForce);
+    void readErrorFIFO2 (const PixFED* pFED, bool pForce);
     std::vector<uint32_t> readErrorFIFO_vec(const PixFED* pFED, bool pForce);
     /*!
      * \brief: read the TTC History FIFO
@@ -225,6 +229,26 @@ class PixFEDInterface
      * \param pFED
      */
     void Resume ( PixFED* pFED );
+
+    std::vector<std::pair<std::string, uint32_t> > RegDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > EventErrorDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > EventTimeoutDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > EventResyncAheadDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > TBMHeaderIDErrorDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > TBMTrailerIDErrorDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > OOSCountErrorDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > PacketCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > TrailerCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > ENECountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > TOCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > PKAMCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > NTPCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > ROC_NBR_ERRCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > OVFCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > AUTORESETCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > GLIBHeaderCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+    std::vector<std::pair<std::string, uint32_t> > GLIBTrailerCountDump ( PixFED* pFED, uint32_t pBlockSize = 0 );
+
     /*!
      * \brief Read data from DAQ
      * \param pFED

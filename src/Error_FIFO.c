@@ -1,26 +1,4 @@
-#include "uhal/uhal.hpp"
-#include "uhal/tests/tools.hpp"
-#include <boost/filesystem.hpp>
-#include "uhal/HwInterface.hpp"
-#include <ctime>
-#include <cstring>
-#include "../Utils/Utilities.h"
-#include "../HWDescription/PixFED.h"
-#include "../HWInterface/PixFEDInterface.h"
-#include "../System/SystemController.h"
-#include "../AMC13/Amc13Controller.h"
-#include "../Utils/Data.h"
 #include "DDR.c"
-
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <cstdlib>
-#include <typeinfo>
-#include <list>
-#include <stdlib.h>
-#include <iterator>
 
 //Test resets on the DDR and Delay studies varying delays or incorrect markers
 void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
@@ -31,15 +9,15 @@ void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
   const char* cHWFile;
 
   if(Choice_Input == 0){
-  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay.xml");
+  	std::string filename ("settings/HWDescription_Delay.xml");
   	cHWFile = filename.c_str();
   }
   else if(Choice_Input == 1){
-  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Resets.xml");
+  	std::string filename ("settings/HWDescription_Resets.xml");
   	cHWFile = filename.c_str();
   }
   else if(Choice_Input == 3){
-  	std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
+  	std::string filename ("settings/HWDescription_PKAM.xml");
   	cHWFile = filename.c_str();
   }
 
@@ -74,13 +52,13 @@ void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
 
   // Can loop over all FEDs since we aren't writing to GLIB registers within the program
   // get the board info of all boards and start the acquistion
-  for (auto& cFED : cSystemController.fPixFEDVector)
-  {
-    //auto& cFED = cSystemController.fPixFEDVector[0];
+  //for (auto& cFED : cSystemController.fPixFEDVector)
+  //{
+    auto& cFED = cSystemController.fPixFEDVector[0];
     cSystemController.fFEDInterface->getBoardInfo(cFED);
     cSystemController.fFEDInterface->findPhases(cFED);
     cSystemController.fFEDInterface->Start (cFED);
-  }
+  //}
 
   std::vector<uint32_t> Error_FIFO;
   std::vector<uint32_t> Error_Analyze;
@@ -88,6 +66,10 @@ void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
   int Incorrect_Event_Num = 0;
   int Timeout_Error = 0;
   int pixel_hit = 0;
+  uint64_t TBM_Mask_1 = cSystemController.fFEDInterface->ReadBoardReg(cFED, "pixfed_ctrl_regs.TBM_MASK_1");
+  uint64_t TBM_Mask_2 = cSystemController.fFEDInterface->ReadBoardReg(cFED, "pixfed_ctrl_regs.TBM_MASK_2");
+  uint64_t TBM_Mask = (TBM_Mask_2 << 32) | TBM_Mask_1;
+  int MarkerCount = Marker_Read();
 
   std::cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << std::endl;
   cAmc13Controller.fAmc13Interface->SendEC0();
@@ -104,7 +86,7 @@ void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
 
     }
 
-    for (auto& cFED : cSystemController.fPixFEDVector){
+    //for (auto& cFED : cSystemController.fPixFEDVector){
 
       if(l == 0){
   	cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
@@ -135,9 +117,9 @@ void Test_Timeouts_Error( int Delay1, int Delay2, int Loops, int Choice_Input){
       cSystemController.fFEDInterface->readTTSState(cFED);
       cSystemController.fFEDInterface->ReadData(cFED, 0 );
 
-    }
+    //}
 
-    Error_Analyze = Error_Event(Error_FIFO);
+    Error_Analyze = Error_Event(Error_FIFO, Timeout_Error, TBM_Mask, MarkerCount);
     Incorrect_Event_Num += Error_Analyze[0];
     Timeout_Error += Error_Analyze[1];
     pixel_hit += Error_Analyze[2];

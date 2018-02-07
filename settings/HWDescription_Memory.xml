@@ -3,7 +3,7 @@
     <AMC13>
         <connection id="T1" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T1:50001" address_table="file://settings/AMC13XG_T1.xml" />
         <connection id="T2" uri="chtcp-2.0://cmsuppixch:10203?target=fedamc13T2:50001" address_table="file://settings/AMC13XG_T2.xml" />
-	<AMCmask enable="3,5,6,9,11" />
+	<AMCmask enable="1" />
         <!--This is used to send a calibration Trigger via the AMC13s internal BGO mechanism, 0x2c is the command configured as BGO15 
              on the TTCci - repeat is obvious, prescale is in orbits, the bx is selected such that it occurs 98 BX before the local
              L1A which is periodic at BX500 every orbit-->
@@ -18,7 +18,7 @@
         <TTCSimulator>1</TTCSimulator>
     </AMC13>
     <PixFED Id="0" boardType="CTA">
-        <connection id="board0" uri="chtcp-2.0://cmsuppixch:10203?target=fedtestfed:50001" address_table="file://settings/address_table.xml" />
+        <connection id="board0" uri="chtcp-2.0://cmsuppixch:10203?target=fedtestfed4:50001" address_table="file://settings/address_table.xml" />
 
         <!-- ACQUISITION MODE & CALIBRATION MODE & DATA TYPE -->
         <!--1: TBM fifo, 2: Slink FIFO, 4: FEROL-->
@@ -29,6 +29,7 @@
         <!--0: real data, 1: constants after TBM fifo, 2: pattern before TBM fifo-->
         <Register name="pixfed_ctrl_regs.data_type">0</Register>
         <!-- 0 indexed -->
+        <Register name="fe_ctrl_regs.fifo_1_to_read"> 0 </Register>
         <Register name="fe_ctrl_regs.fifo_config.channel_of_interest">0</Register>
         <!--o for PSI46dig-->
         <Register name="fe_ctrl_regs.fifo_config.TBM_old_new">0x0</Register>
@@ -62,6 +63,7 @@
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask"> 0xff </Register>
         <!--Mask operation for the TBM trailer STATUS2 or ERR_BITS STATUS2(2:0) = [WrongNbOfROCs - AutoResetSent - PKAMReseSent] Masked or not with trailer_status_mask2(2:0)-->
         <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask2"> 0x7 </Register>
+        <Register name="pixfed_ctrl_regs.tbm_trailer_status_mask3"> 0x3 </Register>
 
         <!--CLOCK-->
         <!--Used to set the CLK input to the TTC clock from the BP - 3 is XTAL, 0 is BP-->

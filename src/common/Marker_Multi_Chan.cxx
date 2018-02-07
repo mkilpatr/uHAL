@@ -17,10 +17,10 @@ int main( int argc, char* argv[] ) {
 	using namespace uhal;
 	using namespace std;
 	
-	ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
-	HwInterface hw3=manager.getDevice( "GLIB.crate.slot_3" );
-	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+	ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );   //this is to glib with the optical card
+	HwInterface hw3=manager.getDevice( "GLIB.crate.slot_9" );
+	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
 	if( argc == 1 ) {
 		std::cout << "1. Choose a Marker to insert a wrong header or trailer in the TBM/ROC." << std::endl;

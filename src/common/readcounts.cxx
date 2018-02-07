@@ -33,9 +33,9 @@ int main() {
   //h1.GetXaxis().SetTitle("Number of Bunches");
   //h1.GetYaxis().SetTitle("Count");
 
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_9" );
 
   
   hw.getNode( "CHA_ROC0_0" ).write(255);
@@ -43,9 +43,9 @@ int main() {
   hw.dispatch();
   std::cout << "CHA_ROC0_0 = " << std::hex << mem.value() << std::endl;
 
-  ValWord< uint32_t > mem2 = hw2.getNode ( "L1A_count" ).read();
-  hw2.dispatch();
-  std::cout << "L1A_count 2 = " << mem2.value() << std::endl;
+  mem = hw.getNode ( "L1A_count" ).read();
+  hw.dispatch();
+  std::cout << "L1A_count 2 = " << mem.value() << std::endl;
 
   ValWord< uint32_t > memBunch = hw.getNode ( "Bunch_count" ).read();
   hw.dispatch();
@@ -55,21 +55,21 @@ int main() {
   hw.dispatch();
   std::cout << "Orbit_count = " << mem.value() << std::endl;
 
-  mem = hw2.getNode ( "user_iphc_ascii_01" ).read();
-  hw2.dispatch();
-  std::cout << "user_iphc_ascii_01 = " << std::hex << mem.value() << std::endl;
+  //mem = hw2.getNode ( "user_iphc_ascii_01" ).read();
+  //hw2.dispatch();
+  //std::cout << "user_iphc_ascii_01 = " << std::hex << mem.value() << std::endl;
 
-  mem = hw2.getNode ( "user_iphc_ascii_02" ).read();
-  hw2.dispatch();
-  std::cout << "user_iphc_ascii_02 = " << mem.value() << std::endl;
+  //mem = hw2.getNode ( "user_iphc_ascii_02" ).read();
+  //hw2.dispatch();
+  //std::cout << "user_iphc_ascii_02 = " << mem.value() << std::endl;
  
-  mem = hw2.getNode ( "user_rice_ascii_01" ).read();
-  hw2.dispatch();
-  std::cout << "user_rice_ascii_01 = " << mem.value() << std::endl;
+  //mem = hw2.getNode ( "user_rice_ascii_01" ).read();
+  //hw2.dispatch();
+  //std::cout << "user_rice_ascii_01 = " << mem.value() << std::endl;
 
-  mem = hw2.getNode ( "user_rice_ascii_02" ).read();
-  hw2.dispatch();
-  std::cout << "user_rice_ascii_02 = " << mem.value() << std::endl;
+  //mem = hw2.getNode ( "user_rice_ascii_02" ).read();
+  //hw2.dispatch();
+  //std::cout << "user_rice_ascii_02 = " << mem.value() << std::endl;
 
   /*for( i = 0; i < 16; i++){
   	mem = hw.getNode ( Read[i] ).read();

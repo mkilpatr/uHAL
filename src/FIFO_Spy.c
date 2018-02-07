@@ -1,455 +1,21 @@
-#include "uhal/uhal.hpp"
-#include "uhal/tests/tools.hpp"
-#include <boost/filesystem.hpp>
-#include "uhal/HwInterface.hpp"
-#include <ctime>
-#include <cstring>
-#include "../Utils/Utilities.h"
-#include "../HWDescription/PixFED.h"
-#include "../HWInterface/PixFEDInterface.h"
-#include "../System/SystemController.h"
-#include "../AMC13/Amc13Controller.h"
-#include "../Utils/Data.h"
 #include "FIFO1.c"
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <cstdlib>
-#include <typeinfo>
-#include <list>
-#include <stdlib.h>
-#include <iterator>
-#include <time.h>
-#include <random> 
-
-void Set_ROCS( int roc_input);
-void Set_Num_Hits( int hit_input);
 void Scan_Pixels();
 void Scan_ADC( int increment );
 int Set_Cal(uint32_t cal_input);
 int Test_Hits_Resets(int test_input);
 void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start, int row_input, int adc_start, int adc_input, int choice_input);
-void PKAM_Enable( int PKAM );
-int Write_ROCs(int i, int Hit_infoA, int Hit_infoB);
 void Test_Phases(int fiber_input, int time_input);
 void Stack_Test(int loops_input, int choice_input);
-
-
-void Set_ROCS(int roc_input)
-{
-  using namespace uhal;
-
-  uint32_t Number_ROCS = 0x88;
-  uint32_t inter_num;  
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );  //this is the glib with the debug card
-
-  uint32_t ROC_Clk = 0x9898;  //Puts a value of 160 clk cycles in channel A & B
-
-  if (roc_input == 0) { }
-  else if (roc_input <= 8) {
-    inter_num = (roc_input << 4);
-    Number_ROCS = inter_num | roc_input;
-  }
-
-  std::string index[8] = {"0","1","2","3","4","5","6","7"};
-
-  for (int i = 0; i<8; i++) {
-    std::string roc_num = "ROC_Number_";
-    roc_num = roc_num + index[i];
-
-    std::string roc_clock = "ROC_CLK_";
-    roc_clock = roc_clock + index[i];
-
-    hw.getNode(roc_num).write( Number_ROCS );
-    ValWord<uint32_t> mem = hw.getNode(roc_num).read();
-    hw.dispatch();
-    hw2.getNode(roc_num).write( Number_ROCS );
-    ValWord<uint32_t> mem2 = hw2.getNode(roc_num).read();
-    hw2.dispatch();
-    hw.getNode(roc_clock).write( ROC_Clk );
-    mem = hw.getNode(roc_clock).read();
-    hw.dispatch();
-    hw2.getNode(roc_clock).write( ROC_Clk );
-    mem2 = hw2.getNode(roc_clock).read();
-    hw2.dispatch();
-    hw3.getNode(roc_num).write( Number_ROCS );
-    ValWord<uint32_t> mem3 = hw3.getNode(roc_num).read();
-    hw3.dispatch();
-    hw3.getNode(roc_clock).write( ROC_Clk );
-    mem3 = hw3.getNode(roc_clock).read();
-    hw3.dispatch();
-  }
-}
-
-void Set_Num_Hits(int hit_input)
-{
-  using namespace uhal;
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
-
-  uint32_t Hits = 0x00000000;
-  uint32_t inter_hits[8];
-
-  if (hit_input == 0) { }
-  else {
-    for (int i = 0; i < 8; i++) {
-      inter_hits[i] = hit_input << (4*(7-i));
-    }
-    Hits = inter_hits[0] | inter_hits[1] | inter_hits[2] | inter_hits[3] | inter_hits[4] | inter_hits[5] | inter_hits[6] | inter_hits[7];
-  }
-
-  ValWord < uint32_t > mem,mem2,mem3;
-  std::string index[8] = {"0","1","2","3","4","5","6","7"};
-
-  for (int i = 0; i < 8; i++) {
-
-    std::string cha_hits = "CHA_Hits_";
-    cha_hits = cha_hits + index[i];
-
-    std::string chb_hits = "CHB_Hits_";
-    chb_hits = chb_hits + index[i];
-
-    hw.getNode(cha_hits).write( Hits );
-    mem = hw.getNode ( cha_hits ).read();
-    hw.dispatch();
-    std::cout << cha_hits << " = " << std::hex << mem.value() << std::endl;
-  	
-    hw.getNode(chb_hits).write( Hits );
-    mem = hw.getNode ( chb_hits ).read();
-    hw.dispatch();
-    std::cout << chb_hits << " = " << std::hex << mem.value() << std::endl;
-
-    hw2.getNode(cha_hits).write( Hits );
-    mem2 = hw2.getNode ( cha_hits ).read();
-    hw2.dispatch();
-    hw2.getNode(chb_hits).write( Hits );
-    mem2 = hw2.getNode ( chb_hits ).read();
-    hw2.dispatch();
-
-    hw3.getNode(cha_hits).write( Hits );
-    mem3 = hw3.getNode ( cha_hits ).read();
-    hw3.dispatch();
-    hw3.getNode(chb_hits).write( Hits );
-    mem3 = hw3.getNode ( chb_hits ).read();
-    hw3.dispatch();
-  }
-
-}
-
-
-void SRAM1_Write( int GLIB_Board ){
-        using namespace uhal;
-        ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );
-	ValWord<uint32_t> mem;
-
-	srand (time(NULL));
-
-	hw.getNode("Wea").write(0);
-        mem = hw.getNode("Wea").read();
-        hw.dispatch();
-	
-	hw.getNode("sys_regs").write(0x10001);
-	mem = hw.getNode("sys_regs").read();
-	hw.dispatch();
-	std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-
-	int col = 0, row = 0, PXL = 0, DCOL = 0, ADC = 0, Write_data = 0;
-
-	for(uint32_t i = 0; i < 0x1FFFFF; i++){
-		hw.getNode("Wea1_en").write(0);
-        	mem = hw.getNode("Wea1_en").read();
-        	hw.dispatch();
-
-        	hw.getNode("Wea1_cs").write(0);
-        	mem = hw.getNode("Wea1_cs").read();
-        	hw.dispatch();
-
-		col = rand() % 52;
-		row = rand() % 80;
-		PXL = New_Row( row, col );
-		DCOL = Illegal_Col( col % 26 );
-		ADC = i % 256;
-		Write_data = (PXL << 16) | (DCOL << 8) | (ADC);
-
-		hw.getNode("SRAM1_addr").write(i);
-                mem = hw.getNode("SRAM1_addr").read();
-                hw.dispatch();
-		if( i % 5000 == 0) std::cout << "addr: " << mem.value() << " Data: " << Write_data << std::endl;
-		hw.getNode("SRAM1_WData").write(Write_data);
-                mem = hw.getNode("SRAM1_WData").read();
-                hw.dispatch();
-                //std::cout << "SRAM1 in: " << std::hex << mem.value() << std::endl;
-		hw.getNode("Wea1_en").write(1);
-        	mem = hw.getNode("Wea1_en").read();
-        	hw.dispatch();
-
-        	hw.getNode("Wea1_cs").write(1);
-        	mem = hw.getNode("Wea1_cs").read();
-        	hw.dispatch();
-	}
-}
-
-void SRAM1_Read( int GLIB_Board ){
-	using namespace uhal;
-        ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-	HwInterface hw = manager.getDevice ( "GLIB.crate.slot_3" );
-	HwInterface hw2 = manager.getDevice( "GLIB.crate.slot_3" );
-	HwInterface hw3 = manager.getDevice( "GLIB.crate.slot_3");
-
-	ValWord<uint32_t> mem;
-        
-	hw.getNode("Wea").write(1);
-        mem = hw.getNode("Wea").read();
-        hw.dispatch();
-
-        hw.getNode("sys_regs").write(0x10001);
-        mem = hw.getNode("sys_regs").read();
-        hw.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-        hw2.getNode("sys_regs").write(0x10001);
-        mem = hw2.getNode("sys_regs").read();
-        hw2.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-        hw3.getNode("sys_regs").write(0x10001);
-        mem = hw3.getNode("sys_regs").read();
-        hw3.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-
-	hw.getNode("SRAM1_WData").write(0x0);
-        mem = hw.getNode("SRAM1_WData").read();
-        hw.dispatch();
-
-	hw.getNode("Wea1_cs").write(1);
-        mem = hw.getNode("Wea1_cs").read();
-        hw.dispatch(); 
-
-	hw.getNode("Wea1_en").write(0);
-        mem = hw.getNode("Wea1_en").read();
-        hw.dispatch();	
-	usleep(10);
-
-	hw.getNode("SRAM1_addr").write(0x1e1e1e);
-        mem = hw.getNode("SRAM1_addr").read();
-        hw.dispatch();
-
-	usleep(100);
-
-	mem = hw.getNode("SRAM1_RData").read();
-	hw.dispatch();
-	std::cout << "Read: " << std::hex << mem.value() << std::endl;
-
-	hw.getNode("Wea1_cs").write(0);
-        mem = hw.getNode("Wea1_cs").read();
-        hw.dispatch();
-
-	//hw.getNode("sys_regs").write(0x00000);
-        //mem = hw.getNode("sys_regs").read();
-        //hw.dispatch();
-        //std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-	//usleep(10);
-
-	//mem = hw.getNode("read_data").read();
-	//hw.dispatch();
-	//std::cout << "read_data: " << mem.value() << std::endl;
-}
-
-void SRAM2_Read( int GLIB_Board ){
-	using namespace uhal;
-        ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-        HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );
-
-	ValWord<uint32_t> mem;
-        
-	hw.getNode("Wea").write(1);
-        mem = hw.getNode("Wea").read();
-        hw.dispatch();
-
-        hw.getNode("sys_regs").write(0x10001);
-        mem = hw.getNode("sys_regs").read();
-        hw.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-
-	hw.getNode("SRAM2_WData").write(0x0);
-        mem = hw.getNode("SRAM2_WData").read();
-        hw.dispatch();
-
-	hw.getNode("Wea2_cs").write(1);
-        mem = hw.getNode("Wea2_cs").read();
-        hw.dispatch(); 
-
-	hw.getNode("Wea2_en").write(0);
-        mem = hw.getNode("Wea2_en").read();
-        hw.dispatch();	
-	usleep(10);
-
-	hw.getNode("SRAM2_addr").write(0x1e1e1e);
-        mem = hw.getNode("SRAM2_addr").read();
-        hw.dispatch();
-	usleep(100);
-
-        hw.getNode("sys_regs").write(0x00000);
-        mem = hw.getNode("sys_regs").read();
-        hw.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-	
-	mem = hw.getNode("SRAM2_RData").read();
-	hw.dispatch();
-	std::cout << "Read: " << std::hex << mem.value() << std::endl;
-	usleep(100);
-
-	mem = hw.getNode("read_data").read();
-	hw.dispatch();
-	std::cout << "read_data: " << mem.value() << std::endl;
-}
-
-void SRAM2_Write( int GLIB_Board ){
-        using namespace uhal;
-        ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-        HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );
-	ValWord<uint32_t> mem;
-
-	std::default_random_engine generator;
-  	std::poisson_distribution<int> distribution(1);	
-	int hit[8];
-
-	hw.getNode("Wea").write(0);
-        mem = hw.getNode("Wea").read();
-        hw.dispatch();
-
-	hw.getNode("sys_regs").write(0x10001);
-        mem = hw.getNode("sys_regs").read();
-        hw.dispatch();
-        std::cout << "sys_regs: " << std::hex << mem.value() << std::endl;
-
-        for(uint32_t i = 0; i < 0x7FFFF; i++){
-		hw.getNode("Wea2_en").write(0);
-        	mem = hw.getNode("Wea2_en").read();
-        	hw.dispatch();
-
-        	hw.getNode("Wea2_cs").write(0);
-        	mem = hw.getNode("Wea2_cs").read();
-        	hw.dispatch();
-
-		for(int j = 0; j < 8; j++)
-			hit[j] = distribution(generator);		
-		int Write_data = hit[0] << 28 | hit[1] << 24 | hit[2] << 20 | hit[3] << 16 | hit[4] << 12 | hit[5] << 8 | hit[6] << 4 | hit[7];
-
-		hw.getNode("SRAM2_addr").write(i);
-                mem = hw.getNode("SRAM2_addr").read();
-                hw.dispatch();
-		if( i % 0xFFF == 1) std::cout << "SRAM2_addr: " << std::hex << mem.value() << " write: " << Write_data << std::endl;
-                hw.getNode("SRAM2_WData").write(Write_data);
-                mem = hw.getNode("SRAM2_WData").read();
-                hw.dispatch();
-                //std::cout << "SRAM2 in: " << std::hex << mem.value() << std::endl;
-		
-		hw.getNode("Wea2_en").write(1);
-        	mem = hw.getNode("Wea2_en").read();
-        	hw.dispatch();
-
-        	hw.getNode("Wea2_cs").write(1);
-        	mem = hw.getNode("Wea2_cs").read();
-        	hw.dispatch();
-	}
-}
-
-void Write_Data_Header( int Header_Value ){
-	using namespace uhal;
-  	ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  	HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
-
-	int New_Header_data_A = Header_Value;
-        int New_Header_data_B = Header_Value;
-	string Chan[8] = {"0", "1", "2", "3", "4", "5", "6", "7"};
-
-        for (int i = 0; i < 8; i++){
-                string Header_A ("Header_Flag_A_");
-                string Header_B ("Header_Flag_B_");
-                Header_A += Chan[i];
-                Header_B += Chan[i];
-
-                hw.getNode(Header_A).write( New_Header_data_A );
-		ValWord<uint32_t> mem = hw.getNode(Header_A).read();
-		hw.dispatch();
-                hw.getNode(Header_B).write( New_Header_data_B );
-		mem = hw.getNode(Header_B).read();
-                hw.dispatch();
-
-                hw2.getNode(Header_A).write( New_Header_data_A );
-		ValWord<uint32_t> mem2 = hw2.getNode(Header_A).read();
-                hw2.dispatch();
-                hw2.getNode(Header_B).write( New_Header_data_B );
-		mem2 = hw2.getNode(Header_B).read();
-                hw2.dispatch();
-
-                hw3.getNode(Header_A).write( New_Header_data_A );
-                ValWord < uint32_t > mem3 = hw3.getNode (Header_A).read();
-                hw3.dispatch();
-                std::cout << "Header_A = " << std::hex << mem3.value() << std::endl;
-                hw3.getNode(Header_B).write( New_Header_data_B );
-		mem3 = hw3.getNode(Header_B).read();
-                hw3.dispatch();
-        }
-}
-
-int Write_ROCs(int i, int Hit_infoA, int Hit_infoB){
-	using namespace std;
-	using namespace uhal;
-	ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-	HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-	HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-	HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
-	
-	std::string Chan[ 8 ] = {"0", "1", "2", "3", "4", "5", "6", "7"};
-
-	for(int j = 0; j < 8; j++){
-		string ROCSA[ 8 ] = {"CHA_ROC0_", "CHA_ROC1_", "CHA_ROC2_", "CHA_ROC3_", "CHA_ROC4_", "CHA_ROC5_", "CHA_ROC6_", "CHA_ROC7_"};
-        	string ROCSB[ 8 ] = {"CHB_ROC0_", "CHB_ROC1_", "CHB_ROC2_", "CHB_ROC3_", "CHB_ROC4_", "CHB_ROC5_", "CHB_ROC6_", "CHB_ROC7_"};
-
-		ROCSA[i] = ROCSA[i] + Chan[j];
-		ROCSB[i] = ROCSB[i] + Chan[j];
-		hw.getNode( ROCSA[i] ).write(Hit_infoA);
-		ValWord<uint32_t> mem = hw.getNode(ROCSA[i]).read();
-        	hw.dispatch();
-		std::cout << ROCSA[i] << " = " << mem.value() << std::endl;
-        	hw.getNode( ROCSB[i] ).write(Hit_infoB);
-		mem = hw.getNode(ROCSB[i]).read();
-        	hw.dispatch();
-        	hw2.getNode( ROCSA[i] ).write(Hit_infoA);
-		ValWord<uint32_t> mem2 = hw2.getNode(ROCSA[i]).read();
-        	hw2.dispatch();
-        	hw2.getNode( ROCSB[i] ).write(Hit_infoB);
-		mem2 = hw2.getNode(ROCSA[i]).read();
-        	hw2.dispatch();
-		hw3.getNode( ROCSA[i] ).write(Hit_infoA);
-		ValWord<uint32_t> mem3 = hw3.getNode(ROCSA[i]).read();
-        	hw3.dispatch();
-		hw3.getNode( ROCSB[i] ).write(Hit_infoB);
-		mem3 = hw3.getNode(ROCSA[i]).read();
-        	hw3.dispatch();
-		ROCSA[j] = ROCSA[j].substr(0,9);
-              	ROCSB[j] = ROCSB[j].substr(0,9);
-	}
-}
 
 void Scan_Pixels() 
 {
   using namespace std;
   using namespace uhal;
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
+  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_11" );
 
   int j,k,i;
   int Max_Column = 0;
@@ -502,9 +68,9 @@ void Scan_ADC(int increment)
   using namespace uhal;
   using namespace std;
   ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
+  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_11" );
 
   int i,j;
   int min_adc = 0;
@@ -542,77 +108,14 @@ void Scan_ADC(int increment)
 
 }
 
-void PKAM_Enable( int PKAM_init ){
-  
-  using namespace uhal;
-  using namespace std;
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
-
-  uint32_t PKAM_Value = 0x01;
-  uint32_t PKAM_Constant = 0x14;
-  uint32_t PKAM_Enable = 0x3;
-  uint32_t PKAM = 0x0;
-
-  if(PKAM_init == 0){
-  	PKAM = (PKAM_Constant << 24) | (PKAM_Constant << 16) | (PKAM_Value << 8) | (PKAM_Value);
-  }
-  else{
-	PKAM = (PKAM_Constant << 24) | (PKAM_Constant << 16) | (PKAM_init << 8) | (PKAM_init); 
-  }
-  
-  std::string index[8] = {"0","1","2","3","4","5","6","7"};
-  std::string temp1 = "PKAM_Reset_";
-  std::string temp2 = "PKAM_Enable_";
-  std::string PKAM_string;
-  std::string Enable_string;
-  
-  for (int i = 0; i < 8; i++) {
-
-    PKAM_string = temp1 + index[i];
-    Enable_string = temp2 + index[i];
-	
-    hw.getNode(PKAM_string).write( PKAM );
-    ValWord < uint32_t > mem = hw.getNode ( PKAM_string ).read();
-    hw.dispatch();
-    std::cout << "PKAM Reset " << std::dec << i << " was set to " << std::hex << (mem.value() & 0xF) << "*256 + 28 clock cycles" << std::endl;
-
-    hw2.getNode(PKAM_string).write( PKAM );
-    ValWord < uint32_t > mem2 = hw2.getNode ( PKAM_string ).read();
-    hw2.dispatch();
-    std::cout << "PKAM Reset " << std::dec << i << " was set to " << std::hex << (mem2.value() & 0xF) << "*256 + 28 clock cycles" << std::endl;
-
-    hw.getNode(Enable_string).write( PKAM_Enable );
-    mem = hw.getNode ( Enable_string ).read();
-    hw.dispatch();
-    //std::cout << "PKAM Enable = " << std::hex << mem.value() << std::endl;
-
-    hw2.getNode(Enable_string).write( PKAM_Enable );
-    mem2 = hw2.getNode ( Enable_string ).read();
-    hw2.dispatch();
-    //std::cout << "PKAM Enable = " << std::hex << mem2.value() << std::endl;
-
-    hw3.getNode(PKAM_string).write( PKAM );
-    ValWord < uint32_t > mem3 = hw3.getNode ( PKAM_string ).read();
-    hw3.dispatch();
-    std::cout << "PKAM Reset " << std::dec << i << " was set to " << std::hex << (mem3.value() & 0xF) << "*256 + 28 clock cycles" << std::endl;
-
-    hw3.getNode(Enable_string).write( PKAM_Enable );
-    mem3 = hw3.getNode ( Enable_string ).read();
-    hw3.dispatch();
-  }
-}
-
 int Set_Cal(uint32_t cal_input) {
 
   using namespace std;
   using namespace uhal;
 
-  ConnectionManager manager ("file://test/dummy_connections.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
+  ConnectionManager manager ("file://test/dummy_connections_mulit_chan.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
 
   ValWord < uint32_t > mem,mem2;
 
@@ -622,8 +125,6 @@ int Set_Cal(uint32_t cal_input) {
   }
   else {
  
-    cal_input = 0x100 * cal_input;
-
     hw.getNode("Cal_Trigger").write( cal_input );
     mem = hw.getNode ( "Cal_Trigger" ).read();
     hw.dispatch();
@@ -649,12 +150,7 @@ int Set_Cal(uint32_t cal_input) {
   int cal_choice;
   cin >> cal_choice;
 
-  if (cal_choice == 1) {
-    //Run Calibration mode test
-  }
-  else if (cal_choice == 2) {
-    //Run Sync mode test
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
+    std::string filename ("settings/HWDescription_Resets.xml");
     const char* cHWFile = filename.c_str();
   
     uhal::setLogLevelTo(uhal::Debug());
@@ -695,6 +191,7 @@ int Set_Cal(uint32_t cal_input) {
       auto& cFED = cSystemController.fPixFEDVector[0];
       cSystemController.fFEDInterface->getBoardInfo(cFED);
       cSystemController.fFEDInterface->findPhases(cFED);
+      cSystemController.fFEDInterface->Start (cFED);
     //}
 
     auto& cFED2 = cSystemController.fPixFEDVector[1];
@@ -717,6 +214,12 @@ int Set_Cal(uint32_t cal_input) {
     int Pixel_Hit = 0;
     std::fill(FIFO.begin(), FIFO.end(), 0);
     std::fill(FIFO_CHB.begin(), FIFO_CHB.end(), 0);
+
+  if (cal_choice == 1) {
+    //Run Calibration mode test
+  }
+  else if (cal_choice == 2) {
+    //Run Sync mode test
 
     for (int l = 0; l < Loops; l++) {
       
@@ -762,68 +265,6 @@ int Set_Cal(uint32_t cal_input) {
   else if (cal_choice == 3) {
     //Run Reset mode test
   
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
-    const char* cHWFile = filename.c_str();
-  
-    uhal::setLogLevelTo(uhal::Debug());
-
-    // instantiate System Controller
-    SystemController cSystemController;
-    Amc13Controller  cAmc13Controller;
-
-    // initialize map of settings so I can know the proper number of acquisitions and TBMs
-    cSystemController.InitializeSettings(cHWFile, std::cout);
-
-    // initialize HWdescription from XML, beware, settings have to be read first
-    cAmc13Controller.InitializeAmc13( cHWFile, std::cout );
-    cSystemController.InitializeHw(cHWFile, std::cout);
-
-    // configure the HW
-    cAmc13Controller.ConfigureAmc13( std::cout );
-    cSystemController.ConfigureHw(std::cout );
-
-    //cAmc13Controller.fAmc13Interface->StartL1A();
-    //for (fAmc13Controller->BGO vector)
-    cAmc13Controller.fAmc13Interface->EnableBGO(0);
-
-    auto cSetting = cSystemController.fSettingsMap.find("NAcq");
-    int cNAcq = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 10;
-    cSetting = cSystemController.fSettingsMap.find("BlockSize");
-    int cBlockSize = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 2;
-
-    cSetting = cSystemController.fSettingsMap.find("ChannelOfInterest");
-    int cChannelOfInterest = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 0;
-
-    cSetting = cSystemController.fSettingsMap.find("ROCOfInterest");
-    int cROCOfInterest = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 0;
-
-    //get the board info of all boards and start the acquistion
-    //for (auto& cFED : cSystemController.fPixFEDVector)
-    //{
-      auto& cFED = cSystemController.fPixFEDVector[0];
-      cSystemController.fFEDInterface->getBoardInfo(cFED);
-      cSystemController.fFEDInterface->findPhases(cFED);
-    //}
-
-    auto& cFED2 = cSystemController.fPixFEDVector[1];
-    auto& cFED3 = cSystemController.fPixFEDVector[2];
-
-    std::vector<unsigned int> FIFO;
-    std::vector<unsigned int> FIFO_CHB;
-    std::vector<unsigned int> Event_Number;
-    unsigned int Event_one = 0;
-    unsigned int Event_two = 0;
-
-    int ROC_Value = 0;
-    int Compare_Event = 0;
-    int Loops = 3;
-    uint32_t Current_Event_Num = 0;
-    int Error_Count = 0;
-    int Do_Error = 0;
-    int Pixel = 0;
-    int Pixel_Hit = 0;
-    std::fill(FIFO.begin(), FIFO.end(), 0);
-    std::fill(FIFO_CHB.begin(), FIFO_CHB.end(), 0);
 
     for (int l = 0; l < Loops; l++) {
       
@@ -890,21 +331,11 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
 
   const char* cHWFile;
 
-  if (choice_input == 0) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay_single.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 1) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 2) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack2.xml");
-    cHWFile = filename.c_str();
-  }
+  std::string filename ("settings/HWDescription_Delay_single.xml");
+  cHWFile = filename.c_str();
 
-  string ROCSA[ 8 ] = {"CHA_ROC0_", "CHA_ROC1_", "CHA_ROC2_", "CHA_ROC3_", "CHA_ROC4_", "CHA_ROC5_", "CHA_ROC6_", "CHA_ROC7_"};
-  string ROCSB[ 8 ] = {"CHB_ROC0_", "CHB_ROC1_", "CHB_ROC2_", "CHB_ROC3_", "CHB_ROC4_", "CHB_ROC5_", "CHB_ROC6_", "CHB_ROC7_"};
+  string ROCSA[ 8 ] = {"CHA_ROC0", "CHA_ROC1", "CHA_ROC2", "CHA_ROC3", "CHA_ROC4", "CHA_ROC5", "CHA_ROC6", "CHA_ROC7"};
+  string ROCSB[ 8 ] = {"CHB_ROC0", "CHB_ROC1", "CHB_ROC2", "CHB_ROC3", "CHB_ROC4", "CHB_ROC5", "CHB_ROC6", "CHB_ROC7"};
 
   uhal::setLogLevelTo(uhal::Debug());
 
@@ -918,15 +349,7 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   // initialize HWdescription from XML, beware, settings have to be read first
   cAmc13Controller.InitializeAmc13( cHWFile, std::cout );
   cSystemController.InitializeHw(cHWFile, std::cout);
-
-  // configure the HW
-  cAmc13Controller.ConfigureAmc13( std::cout );
-  cSystemController.ConfigureHw(std::cout );
-
-  //cAmc13Controller.fAmc13Interface->StartL1A();
-  //for (fAmc13Controller->BGO vector)
-  cAmc13Controller.fAmc13Interface->EnableBGO(0);
-
+  
   auto cSetting = cSystemController.fSettingsMap.find("NAcq");
   int cNAcq = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 10;
   cSetting = cSystemController.fSettingsMap.find("BlockSize");
@@ -938,13 +361,14 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   cSetting = cSystemController.fSettingsMap.find("ROCOfInterest");
   int cROCOfInterest = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 0;
 
-  //get the board info of all boards and start the acquistion
-  //for (auto& cFED : cSystemController.fPixFEDVector)
-  //{
-      auto& cFED = cSystemController.fPixFEDVector[0];
-      cSystemController.fFEDInterface->getBoardInfo(cFED);
-      cSystemController.fFEDInterface->findPhases(cFED);
-  //}
+  // configure the HW
+  cAmc13Controller.ConfigureAmc13( std::cout );
+  cSystemController.ConfigureHw(std::cout );
+
+  auto& cFED = cSystemController.fPixFEDVector[0];
+  cSystemController.fFEDInterface->getBoardInfo(cFED);
+  cSystemController.fFEDInterface->findPhases(cFED);
+  cSystemController.fFEDInterface->Start (cFED);
  
   auto& cFED2 = cSystemController.fPixFEDVector[1];
   auto& cFED3 = cSystemController.fPixFEDVector[2];
@@ -989,6 +413,11 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   //std::fill(FIFO1.begin(), FIFO1.end(), 0);
   std::fill(FIFO1_marker.begin(), FIFO1_marker.end(), 0);
 
+  cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << endl;
+  cAmc13Controller.fAmc13Interface->SendEC0();
+  cAmc13Controller.fAmc13Interface->EnableBGO(0);
+  cAmc13Controller.fAmc13Interface->DisableBGO(0);
+
   int max_row = row_input; //atoi(argv[3]); //80
   if (max_row > 80 || max_row == 0) {
   	max_row = 80;
@@ -1013,6 +442,7 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
   int num_ROC = -1;
 
   std::string index[8] = {"0","1","2","3","4","5","6","7"};
+  std::string fiber ("Fiber_");
 
   for (int l = 0; l < Loops; l++) 
   {
@@ -1044,8 +474,8 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
             for (int i = 0; i < 8; i++) {
               //Write_ROCs( i, Hit_infoA, Hit_infoB); 
 
-              ROCSA[j] = ROCSA[j] + index[i];
-              ROCSB[j] = ROCSB[j] + index[i];
+	      string ROCA = fiber + index[i] + "." + ROCSA[j];
+	      string ROCB = fiber + index[i] + "." + ROCSB[j];
 	
 	      Hit_infoA_buff = Illegal_Col(dcol);
               Hit_infoB_buff = Illegal_Col(dcol);
@@ -1054,14 +484,14 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
               Hit_infoA_new = (new_row << 16) | (Hit_infoA_buff << 8) | (Hit_infoA & 0xFF);
               Hit_infoB_new = (new_row << 16) | (Hit_infoB_buff << 8) | (Hit_infoB & 0xFF);
 
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSA[j], Hit_infoA_new);
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCSB[j], Hit_infoB_new);
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCA, Hit_infoA_new);
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED2, ROCB, Hit_infoB_new);
 
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSA[j], Hit_infoA_new);
-              cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCSB[j], Hit_infoB_new);
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCA, Hit_infoA_new);
+              cSystemController.fFEDInterface->WriteBoardReg(cFED3, ROCB, Hit_infoB_new);
           
-	      cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCSA[j], Hit_infoA_new);
-              cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCSB[j], Hit_infoB_new);
+	      cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCA, Hit_infoA_new);
+              cSystemController.fFEDInterface->WriteBoardReg(cFED4, ROCB, Hit_infoB_new);
 
               ROCSA[j] = ROCSA[j].substr(0,9);
               ROCSB[j] = ROCSB[j].substr(0,9);
@@ -1075,11 +505,9 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
  
           }
 
-	  //for (auto& cFED : cSystemController.fPixFEDVector)
-  	  //{
-  	    cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);   
 
             if(l == 0 && row == 0 && col == 0 && adc == 0){
+  	    cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);   
 	      sleep(4);
 	      cAmc13Controller.fAmc13Interface->BurstL1A();
 	      sleep(0.001);
@@ -1093,7 +521,6 @@ void Test_Hits_Full(int loops_input, int col_start, int col_input, int row_start
             FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
             FIFO1 = cSystemController.fFEDInterface->readFIFO1_vec(cFED);
    //         FIFO1_marker = cSystemController.fFEDInterface->readFIFO1Marker(cFED);
-	  //}
 
 	  int k = 0;
 	  int j = 0;
@@ -1475,12 +902,12 @@ int Test_Hits_Resets( int test_input, int Loops )
 
   if ( test_input == 0) {
     //std::cout << "Testing normal event." << std::endl;
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_PKAM.xml");
+    std::string filename ("settings/HWDescription_PKAM.xml");
     cHWFile = filename.c_str();
   }
   else if ( test_input == 1) {
     //std::cout << "Testing TBM Reset." << std::endl;
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Resets.xml");
+    std::string filename ("settings/HWDescription_Resets.xml");
     cHWFile = filename.c_str();
   }
   else if ( test_input >= 3) {
@@ -1528,7 +955,7 @@ int Test_Hits_Resets( int test_input, int Loops )
 	
     std::vector<unsigned int> FIFO;
     std::vector<unsigned int> FIFO_CHB;
-    std::vector<unsigned int> Spy_Analyze;
+    std::vector<std::vector<unsigned int>> Spy_Analyze(2);
     int Compare_Event_Spy = 0;
     int Total_Events = 0;
     int Incorrect_Header = 0;
@@ -1555,41 +982,33 @@ int Test_Hits_Resets( int test_input, int Loops )
     cAmc13Controller.fAmc13Interface->DisableBGO(0);
 	
 
-    for (int l = 0; l < Loops; l++)
-    {
-	for (auto& cFED : cSystemController.fPixFEDVector)
-        {
-		if(l == 1){
-			cAmc13Controller.fAmc13Interface->EnableBGO(1);
+    for (int l = 0; l < Loops; l++){
+        for (auto& cFED : cSystemController.fPixFEDVector){
+            if(l == 1){
+                cAmc13Controller.fAmc13Interface->EnableBGO(1);
 	    		sleep(0.001);
 	    		cAmc13Controller.fAmc13Interface->DisableBGO(1);
-			cSystemController.fFEDInterface->readSpyFIFO(cFED);
-	            	cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
-	            	cSystemController.fFEDInterface->readFIFO1(cFED);
-		}
+            }
 	
-	        //for (auto& cFED : cSystemController.fPixFEDVector)
-	        //{
+	        cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
+            sleep(4);
+            cAmc13Controller.fAmc13Interface->BurstL1A();
+            sleep(0.001);
 	
-	            cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);
-			sleep(4);
-			cAmc13Controller.fAmc13Interface->BurstL1A();
-		    sleep(0.001);
+	        FIFO = cSystemController.fFEDInterface->readSpyFIFO(cFED);
+	        FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
+	        cSystemController.fFEDInterface->readFIFO1(cFED);
 	
-	            FIFO = cSystemController.fFEDInterface->readSpyFIFO(cFED);
-	            FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
-	            cSystemController.fFEDInterface->readFIFO1(cFED);
-	
-	      	    Spy_Analyze = Spy_FIFO_Event(FIFO, FIFO_CHB, Compare_Event_Spy);
+	      	Spy_Analyze = Spy_FIFO_Event(FIFO, FIFO_CHB, Compare_Event_Spy);
 	
         }
 
-	Compare_Event_Spy = Spy_Analyze[0];
-	Total_Events += Spy_Analyze[1];
-    	Incorrect_Header += Spy_Analyze[2];
-    	Incorrect_Trailer += Spy_Analyze[3];
-    	Incorrect_Event_Num += Spy_Analyze[4];
-    	Incorrect_ROC += Spy_Analyze[5];
+        Compare_Event_Spy = Spy_Analyze[0][0];
+        Total_Events += Spy_Analyze[0][1];
+    	Incorrect_Header += Spy_Analyze[0][2];
+    	Incorrect_Trailer += Spy_Analyze[0][3];
+    	Incorrect_Event_Num += Spy_Analyze[0][4];
+    	Incorrect_ROC += Spy_Analyze[0][5];
 
     }
 
@@ -1602,11 +1021,11 @@ int Test_Hits_Resets( int test_input, int Loops )
     return 0;
 }
 
-void Test_Phases (int fiber_input, int time_input)
+void Test_Phases (int fiber_input, int time_input, int test_input)
 {
 
   const char* cHWFile;
-  std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Delay.xml");
+  std::string filename ("settings/HWDescription_Delay.xml");
   cHWFile = filename.c_str();
 
   uhal::setLogLevelTo(uhal::Debug());
@@ -1637,35 +1056,31 @@ void Test_Phases (int fiber_input, int time_input)
   cAmc13Controller.ConfigureAmc13( std::cout );
   cSystemController.ConfigureHw(std::cout );
 
-  for (auto& cFED : cSystemController.fPixFEDVector){
-  	if(fiber_input < 0){}
-  	else{
-		cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.fifo_config.channel_of_interest", fiber_input);	
-	}
-
-  // get the board info of all boards and start the acquistion
-  //for (auto& cFED : cSystemController.fPixFEDVector)
-  //{
-    cSystemController.fFEDInterface->getBoardInfo(cFED);
-    /*for (auto& cFitel : cFED->fFitelVector)
-    {
-      cSystemController.fFEDInterface->ReadADC(cFitel, cChannelOfInterest, true);
-    }*/
-    cSystemController.fFEDInterface->getBoardInfo(cFED);
-    cSystemController.fFEDInterface->findPhases2(cFED, cChannelOfInterest);
+  //for (auto& cFED : cSystemController.fPixFEDVector){
+  auto& cFED = cSystemController.fPixFEDVector[0];  
+  if(fiber_input < 0){}
+  else{
+  	cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.fifo_config.channel_of_interest", fiber_input);	
   }
+ 
+  cSystemController.fFEDInterface->getBoardInfo(cFED);
+  cSystemController.fFEDInterface->getBoardInfo(cFED);
+  cSystemController.fFEDInterface->findPhases2(cFED, cChannelOfInterest);
 
   std::cout << "Monitoring Phases for selected Channel of Interest for " << time_input << " seconds ... " << std::endl << std::endl;
   std::cout << BOLDGREEN << "FIBRE CTRL_RDY CNTVAL_Hi CNTVAL_Lo   pattern:                     S H1 L1 H0 L0   W R" << RESET << std::endl;
+  if(test_input != 0){
+  cChannelOfInterest = fiber_input; 
   for(int i = 0; i < time_input/3; i++)
   {
-    for (auto& cFED : cSystemController.fPixFEDVector)
-    {
       cSystemController.fFEDInterface->monitorPhases(cFED, cChannelOfInterest);
-
+  }
+  }
+  else{
+    for(int j = 0; j < 24; j++){
+      for(int i = 0; i < time_input/3; i++) cSystemController.fFEDInterface->monitorPhases(cFED, j);
     }
   }
-
 }
 
 void Stack_Test (int loops_input, int choice_input)
@@ -1676,42 +1091,18 @@ void Stack_Test (int loops_input, int choice_input)
 
   const char* cHWFile;
 
-  if (choice_input == 0) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 1) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack.xml");
-    cHWFile = filename.c_str();
-  }
-  else if (choice_input == 2) {
-    std::string filename ("/home/fectest/FEDtester/MrPixel/build/ttctest/settings/HWDescription_Stack2.xml");
-    cHWFile = filename.c_str();
-  }
-
-  string ROCSA[ 8 ] = {"CHA_ROC0_", "CHA_ROC1_", "CHA_ROC2_", "CHA_ROC3_", "CHA_ROC4_", "CHA_ROC5_", "CHA_ROC6_", "CHA_ROC7_"};
-  string ROCSB[ 8 ] = {"CHB_ROC0_", "CHB_ROC1_", "CHB_ROC2_", "CHB_ROC3_", "CHB_ROC4_", "CHB_ROC5_", "CHB_ROC6_", "CHB_ROC7_"};
+  std::string filename ("settings/HWDescription_Stack.xml");
+  cHWFile = filename.c_str();
 
   uhal::setLogLevelTo(uhal::Debug());
 
-  // instantiate System Controller
   SystemController cSystemController;
   Amc13Controller  cAmc13Controller;
 
-  // initialize map of settings so I can know the proper number of acquisitions and TBMs
   cSystemController.InitializeSettings(cHWFile, std::cout);
 
-  // initialize HWdescription from XML, beware, settings have to be read first
   cAmc13Controller.InitializeAmc13( cHWFile, std::cout );
   cSystemController.InitializeHw(cHWFile, std::cout);
-
-  // configure the HW
-  cAmc13Controller.ConfigureAmc13( std::cout );
-  cSystemController.ConfigureHw(std::cout );
-
-  //cAmc13Controller.fAmc13Interface->StartL1A();
-  //for (fAmc13Controller->BGO vector)
-  cAmc13Controller.fAmc13Interface->EnableBGO(0);
 
   auto cSetting = cSystemController.fSettingsMap.find("NAcq");
   int cNAcq = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 10;
@@ -1723,23 +1114,19 @@ void Stack_Test (int loops_input, int choice_input)
 
   cSetting = cSystemController.fSettingsMap.find("ROCOfInterest");
   int cROCOfInterest = (cSetting != std::end(cSystemController.fSettingsMap)) ? cSetting->second : 0;
+  
+  cAmc13Controller.ConfigureAmc13( std::cout );
+  cSystemController.ConfigureHw(std::cout );
 
-  //get the board info of all boards and start the acquistion
-  //for (auto& cFED : cSystemController.fPixFEDVector)
-  //{
-      auto& cFED = cSystemController.fPixFEDVector[0];
-      cSystemController.fFEDInterface->getBoardInfo(cFED);
-      cSystemController.fFEDInterface->findPhases(cFED);
-  //}
+  auto& cFED = cSystemController.fPixFEDVector[0];
+  cSystemController.fFEDInterface->getBoardInfo(cFED);
+  cSystemController.fFEDInterface->findPhases(cFED);
+  cSystemController.fFEDInterface->Start (cFED);
  
-  auto& cFED2 = cSystemController.fPixFEDVector[1];
-  auto& cFED3 = cSystemController.fPixFEDVector[2];
-  auto& cFED4 = cSystemController.fPixFEDVector[3];
-
   std::vector<unsigned int> FIFO;
   std::vector<unsigned int> FIFO_CHB;
   std::vector<unsigned int> Event_Number;
-  std::vector<unsigned int> Spy_Analyze;
+  std::vector<std::vector<unsigned int>> Spy_Analyze(2);
   unsigned int Event_one = 0;
   unsigned int Event_two = 0;
 
@@ -1765,51 +1152,31 @@ void Stack_Test (int loops_input, int choice_input)
   int Pixel = 0;
   int Pixel_Hit = 0;
   int Incorrect_Pixel = 0;
-  sleep(.0001);
-  std::fill(FIFO.begin(), FIFO.end(), 0);
-  std::fill(FIFO_CHB.begin(), FIFO_CHB.end(), 0);
-
-  int test_adc = 0;
-  int test_col = 0;
-  int test_row = 0;
-
-  int num_ROC = -1;
 
   int max_stack = 0;
 
-  std::string index[8] = {"0","1","2","3","4","5","6","7"};
+  cout << "FED Configured, SLink Enabled, pressing Enter will send an EC0 & start periodic L1As" << endl;
+  cAmc13Controller.fAmc13Interface->SendEC0();
+  cAmc13Controller.fAmc13Interface->EnableBGO(0);
+  sleep(0.001);
+  cAmc13Controller.fAmc13Interface->DisableBGO(0);
 
-  for (int l = 0; l < Loops; l++) 
-  {
-    if(l%5000 == 0){
-      std::cout << "Loop Number = " << std::dec << l << std::endl;
-    }         
-
-    //for (auto& cFED : cSystemController.fPixFEDVector)
-    //{
-      cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);   
-
+  for (int l = 0; l < Loops; l++){
       if(l == 0){
+        cSystemController.fFEDInterface->WriteBoardReg(cFED, "fe_ctrl_regs.decode_reg_reset", 1);   
         sleep(4);
-	cAmc13Controller.fAmc13Interface->BurstL1A();
-	sleep(0.001);
+        cAmc13Controller.fAmc13Interface->BurstL1A();
       }
       else{
         cAmc13Controller.fAmc13Interface->BurstL1A();
-	sleep(0.001);
       }
 
-      //sleep(.001);
+      sleep(0.001);
       FIFO = cSystemController.fFEDInterface->readSpyFIFO(cFED);
       FIFO_CHB = cSystemController.fFEDInterface->readSpyFIFO_CHB(cFED);
-    //}
 
       Spy_Analyze = Spy_FIFO_Event(FIFO, FIFO_CHB, Compare_Event_Spy);
-      Compare_Event_Spy = Spy_Analyze[0];
-
-  std::cout << "Max stack was " << std::dec << max_stack << std::endl;
-
-  //exit(0);
-
-}
+      Compare_Event_Spy = Spy_Analyze[0][0];
+      std::cout << "Max stack was " << std::dec << Spy_Analyze[0][7] << std::endl;
+  }
 }

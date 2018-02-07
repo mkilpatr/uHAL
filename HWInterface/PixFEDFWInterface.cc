@@ -157,9 +157,21 @@ void PixFEDFWInterface::findPhases ()
     // set the parameters for IDELAY scan
     std::vector<uint32_t> cValVec;
 
-    for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         // create a Value Vector that contains the write value for each channel
+    for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         cValVec.push_back ( 0x80000000 );
+    for (uint32_t chan = 24; chan < 48; chan++)
+        cValVec.push_back ( 0x00080008 );
+    //for (uint32_t chan = 28; chan < 32; chan++)
+    //    cValVec.push_back ( 0x00040004 );
+    //for (uint32_t chan = 32; chan < 36; chan++)
+    //    cValVec.push_back ( 0x00080008 );
+    //for (uint32_t chan = 36; chan < 40; chan++)
+    //    cValVec.push_back ( 0x00020002 );
+    //for (uint32_t chan = 40; chan < 44; chan++)
+    //    cValVec.push_back ( 0x00080008 );
+    //for (uint32_t chan = 44; chan < 48; chan++)
+    //    cValVec.push_back ( 0x00040004 );
 
     WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
     cValVec.clear();
@@ -174,6 +186,16 @@ void PixFEDFWInterface::findPhases ()
     // set auto_delay_scan and remove idel_RST
     for (uint32_t cChannel = 0; cChannel < 24; cChannel++)
         cValVec.push_back ( 0x80000000 );
+    //for (uint32_t cChannel = 4; cChannel < 8; cChannel++)
+    //    cValVec.push_back ( 0x80010000 );
+    //for (uint32_t cChannel = 8; cChannel < 12; cChannel++)
+    //    cValVec.push_back ( 0x80000000 );
+    //for (uint32_t cChannel = 12; cChannel < 16; cChannel++)
+    //    cValVec.push_back ( 0x80010000 );
+    //for (uint32_t cChannel = 16; cChannel < 20; cChannel++)
+    //    cValVec.push_back ( 0x80000000 );
+    //for (uint32_t cChannel = 20; cChannel < 24; cChannel++)
+    //    cValVec.push_back ( 0x80010000 );
 
     WriteBlockReg ( "fe_ctrl_regs.idel_individual_ctrl", cValVec );
     cValVec.clear();
@@ -205,6 +227,7 @@ void PixFEDFWInterface::findPhases ()
 
     while ( (ReadBlockRegValue ("idel_individual_stat.CH0", 4).at (2) >> 29) & 0x03 != 0x2)
         usleep (1000);
+    sleep(2);
 
     t.stop();
     t.show ("Additional Time for swap: ");
@@ -302,6 +325,11 @@ prettyprintPhase (cReadValues, cChannel);
 readTTSState();
 }
 
+std::vector<uint32_t> PixFEDFWInterface::OOSTimeout(){
+	std::vector<uint32_t> OOSTimeout = ReadBlockRegValue("pixfed_stat_regs.OOS_timeout_block", 12);
+	return OOSTimeout;
+}
+
 void PixFEDFWInterface::monitorPhases (uint32_t pScopeFIFOCh)
 {
     //std::cout << "Monitoring Phases for selected Channel of Interest for 10 seconds ... " << std::endl << std::endl;
@@ -310,13 +338,29 @@ void PixFEDFWInterface::monitorPhases (uint32_t pScopeFIFOCh)
 
     std::string cRegname = "idel_individual_stat.CH" + std::to_string (pScopeFIFOCh);
     std::vector<uint32_t> cReadValues = ReadBlockRegValue ( cRegname, 4 );
-    prettyprintPhase (cReadValues, 0);
+    prettyprintPhase (cReadValues, 0, pScopeFIFOCh);
     std::this_thread::sleep_for ( cWait );
 }
 
 void PixFEDFWInterface::prettyprintPhase (const std::vector<uint32_t>& pData, int pChannel)
 {
     std::cout << GREEN << "Fibre: " << std::setw (2) <<  pChannel + 1 << RESET << "    " <<
+              std::bitset<1> ( (pData.at ( (pChannel * 4 ) + 0 ) >> 10 ) & 0x1 )   << "    " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 0 ) >> 5  ) & 0x1f )  << "    " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 0 )       ) & 0x1f ) << "    " <<
+              BLUE << std::bitset<32> ( pData.at ( (pChannel * 4 ) + 1 ) ) << RESET << "    " <<
+              std::bitset<1> ( (pData.at ( (pChannel * 4 ) + 2 ) >> 31 ) & 0x1 )  << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 ) >> 23 ) & 0x1f)  << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 ) >> 18 ) & 0x1f)  << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 ) >> 13 ) & 0x1f ) << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 ) >> 8  ) & 0x1f ) << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 ) >> 5  ) & 0x7  ) << " " << std::setw (2) <<
+              ( (pData.at ( (pChannel * 4 ) + 2 )       ) & 0x1f ) << std::endl;
+}
+
+void PixFEDFWInterface::prettyprintPhase (const std::vector<uint32_t>& pData, int pChannel, int mChannel)
+{
+    std::cout << GREEN << "Fibre: " << std::setw (2) <<  mChannel + 1 << RESET << "    " <<
               std::bitset<1> ( (pData.at ( (pChannel * 4 ) + 0 ) >> 10 ) & 0x1 )   << "    " << std::setw (2) <<
               ( (pData.at ( (pChannel * 4 ) + 0 ) >> 5  ) & 0x1f )  << "    " << std::setw (2) <<
               ( (pData.at ( (pChannel * 4 ) + 0 )       ) & 0x1f ) << "    " <<
@@ -433,9 +477,12 @@ std::vector<uint32_t> PixFEDFWInterface::readTransparentFIFO()
 {
     //WriteReg ("fe_ctrl_regs.decode_reg_reset", 1);
     std::vector<uint32_t> cFifoVec = ReadBlockRegValue ( "fifo.bit_stream", 512 );
+    int delay = ReadReg ( "fe_ctrl_regs.transparentFIFO_delay" );
     //vectors to pass to the NRZI decoder as reference to be filled by that
     std::vector<uint8_t> c5bSymbol, c5bNRZI, c4bNRZI;
     decode_symbols (cFifoVec, c5bSymbol, c5bNRZI, c4bNRZI);
+    std::cout << "fe_ctrl_regs.transparentFIFO_delay: " << delay << std::endl;
+    std::cout << "FifoVec size: " << cFifoVec.size() << " 5bSymbol size: " << c5bSymbol.size() << " 5bNRZI size: " << c5bNRZI.size() << " 4bNRZI size: " << c4bNRZI.size() << std::endl;
     prettyPrintTransparentFIFO (cFifoVec, c5bSymbol, c5bNRZI, c4bNRZI);
     return cFifoVec;
 }
@@ -455,8 +502,8 @@ void PixFEDFWInterface::prettyPrintTransparentFIFO (const std::vector<uint32_t>&
         //first line with the timestamp
         std::cout << "          " << ( (pFifoVec.at ( (j * 16) ) >> 20 ) & 0xfff) << ": ";
 
-        for (uint32_t i = 0; i < 16; i++)
-            std::cout << " " << std::bitset<5> ( ( (p5bSymbol.at (i + (j * 16) ) >> 0) & 0x1f) );
+        //for (uint32_t i = 0; i < 16; i++)
+        //    std::cout << " " << std::bitset<5> ( ( (p5bSymbol.at (i + (j * 16) ) >> 0) & 0x1f) );
 
         std::cout << std::endl << "               ";
 
@@ -730,11 +777,19 @@ uint8_t PixFEDFWInterface::readTTSState()
 }
 
 
+uint8_t PixFEDFWInterface::readTTSStateNoPrint()
+{
+    uint8_t cWord = ReadReg ("pixfed_stat_regs.tts.word") & 0x0000000F;
+    
+    return cWord;
+}
+
+
 void PixFEDFWInterface::readErrorFIFO (bool pForce)
 {
     if (pForce)
     {
-        std::cout << "Forcing read of ERROR Fifo!" << std::endl;
+        //std::cout << "Forcing read of ERROR Fifo!" << std::endl;
         //first, enable the error fifo
         WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 1);
     }
@@ -742,10 +797,10 @@ void PixFEDFWInterface::readErrorFIFO (bool pForce)
     //then poll for error fifo ready=1
     while (ReadReg ("pixfed_stat_regs.error_fifo_read_rdy") != 1) usleep (100);
 
-    std::cout << "Error FIFO read ready =1! " << std::endl;
+    //std::cout << "Error FIFO read ready =1! " << std::endl;
 
     uint32_t cErrorWords = ReadReg ("pixfed_stat_regs.error_fifo_wr_data_count");
-    std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
+    //std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
 
     //block read the error fifo with cErrorWords words
     std::vector<uint32_t> cErrors = ReadBlockRegValue ("ERROR_fifo" , cErrorWords );
@@ -761,34 +816,77 @@ void PixFEDFWInterface::readErrorFIFO (bool pForce)
 
     if (pForce) WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 0);
 
-    std::cout << "ERROR Fifo content: " << std::endl;
+    //std::cout << "ERROR Fifo content: " << std::endl;
 
+    int ENE = 0;
     for (auto& cWord : cErrors)
     {
         //std::cout << std::bitset<32> (cWord) << std::endl;
         //std::cout << std::hex << cWord << std::endl;
-        prettypPrintErrors (cWord);
+        ENE = prettypPrintErrors (cWord, ENE);
+    }
+}
+
+void PixFEDFWInterface::readErrorFIFO2 (bool pForce)
+{
+    if (pForce)
+    {
+        //std::cout << "Forcing read of ERROR Fifo!" << std::endl;
+        //first, enable the error fifo
+        WriteReg ("pixfed_ctrl_regs.error_fifo2_force_read", 1);
+    }
+
+    //then poll for error fifo ready=1
+    while (ReadReg ("pixfed_stat_regs.error_fifo2_read_rdy") != 1) usleep (100);
+
+    //std::cout << "Error FIFO read ready =1! " << std::endl;
+
+    uint32_t cErrorWords = ReadReg ("pixfed_stat_regs.error_fifo2_wr_data_count");
+    //std::cout << "Error FIFO contains " << cErrorWords << " error words!" << std::endl;
+
+    //block read the error fifo with cErrorWords words
+    std::vector<uint32_t> cErrors = ReadBlockRegValue ("ERROR_fifo" , cErrorWords );
+
+    //done reading the error fifo
+    WriteReg ("pixfed_ctrl_regs.error_fifo2_read_done", 1);
+
+    //then poll for error fifo ready = 0
+    while (ReadReg ("pixfed_stat_regs.error_fifo2_read_rdy") = 1) usleep (100);
+
+    //release
+    WriteReg ("pixfed_ctrl_regs.error_fifo2_read_done", 0);
+
+    if (pForce) WriteReg ("pixfed_ctrl_regs.error_fifo2_force_read", 0);
+
+    //std::cout << "ERROR Fifo content: " << std::endl;
+
+    int ENE = 0;
+    for (auto& cWord : cErrors)
+    {
+        //std::cout << std::bitset<32> (cWord) << std::endl;
+        //std::cout << std::hex << cWord << std::endl;
+        ENE = prettypPrintErrors (cWord, ENE);
     }
 }
 
 std::vector<uint32_t> PixFEDFWInterface::TTCHistoryFIFO(bool pForce){
-	std::cout << "-> TTC_HISTORY_FIFO_read_rdy :" << ReadReg( "TTC_HISTORY_FIFO_read_rdy") << std::endl;
-        std::cout << "-> TTC_HISTORY_FIFO_wr_data_count :" << ReadReg( "TTC_HISTORY_wr_data_count") << std::endl;
+    std::cout << "-> pixfed_stat_regs.ttc.history_fifo_read_rdy :" << ReadReg( "pixfed_stat_regs.ttc.history_fifo_read_rdy") << std::endl;
+    std::cout << "-> TTC_HISTORY_fifo_wr_data_count :" << ReadReg( "pixfed_stat_regs.ttc.history_wr_data_count") << std::endl;
 
-        std::cout << "---> Force read" << std::endl;
-        WriteReg("TTC_HISTORY.TTC_HISTORY_FIFO_force_read",1);
-        int WordsNbToRead = ReadReg("TTC_HISTORY_wr_data_count");
-        std::cout << "->" << WordsNbToRead << " words to read from ERR_FIFO..." << std::endl;
-        std::vector< unsigned int > ERR_FIFO_rdData = ReadBlockRegValue("TTC_HISTORY_FIFO", WordsNbToRead);
+    std::cout << "---> Force read" << std::endl;
+    WriteReg("pixfed_ctrl_regs.ttc.history_fifo_force_read",1);
+    int WordsNbToRead = ReadReg("pixfed_stat_regs.ttc.history_wr_data_count");
+    std::cout << "->" << WordsNbToRead << " words to read from TTC_History_FIFO..." << std::endl;
+    std::vector< unsigned int > ERR_FIFO_rdData = ReadBlockRegValue("TTC_HISTORY_fifo", WordsNbToRead);
 
-        for( int i = 0; i < WordsNbToRead; i++)
-                std::cout << std::hex << ERR_FIFO_rdData[i] << "Event :" << ((ERR_FIFO_rdData[i]&0xfffc0)>>6) << " BX: " << ((ERR_FIFO_rdData[i]&0xfff00000)>>20) << " B data: " << (ERR_FIFO_rdData[i]&0x3f) << std::endl;
+    for( int i = 0; i < WordsNbToRead; i++)
+            std::cout << std::hex << ERR_FIFO_rdData[i] << "Event :" << ((ERR_FIFO_rdData[i]&0xfffc0)>>6) << " BX: " << ((ERR_FIFO_rdData[i]&0xfff00000)>>20) << " B data: " << (ERR_FIFO_rdData[i]&0x3f) << std::endl;
 
-        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_read_done",1);
-        sleep(1);
-        std::cout << "-> TTC_HISTORY_FIFO_read_rdy :" << ReadReg( "TTC_HISTORY_FIFO_read_rdy") << std::endl;
-        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_force_read",0);
-        WriteReg( "TTC_HISTORY.TTC_HISTORY_FIFO_read_done",0);
+    WriteReg( "pixfed_ctrl_regs.ttc.history_fifo_read_done",1);
+    sleep(1);
+    std::cout << "-> pixfed_stat_regs.ttc.history_fifo_read_rdy :" << ReadReg( "pixfed_stat_regs.ttc.history_fifo_read_rdy") << std::endl;
+    WriteReg( "pixfed_ctrl_regs.ttc.history_fifo_force_read",0);
+    WriteReg( "pixfed_ctrl_regs.ttc.history_fifo_read_done",0);
 	
 	return ERR_FIFO_rdData;
 }
@@ -825,23 +923,24 @@ std::vector<uint32_t> PixFEDFWInterface::readErrorFIFO_vec (bool pForce)
     if (pForce) WriteReg ("pixfed_ctrl_regs.error_fifo_force_read", 0);
 
     //std::cout << "ERROR Fifo content: " << std::endl;
+    int ENE = 0;
 
-    //for(auto& cWord : cErrors){
-//	prettypPrintErrors_test(cWord);
+    for(auto& cWord : cErrors){
+	    ENE = prettypPrintErrors(cWord, ENE);
     	//Error_buffer.push_back(cWord);
- //   }
+    }
 
     return cErrors;
 }
 
-void PixFEDFWInterface::prettypPrintErrors (const uint32_t& cWord)
+int PixFEDFWInterface::prettypPrintErrors (const uint32_t& cWord, int ENE)
 {
     uint32_t cChannel = (cWord & 0xFC000000) >> 26;
     uint32_t cMarker = (cWord & 0x03E00000) >> 21;
     uint32_t cL1Actr = (cWord & 0x001FE000) >> 13;
     uint32_t cErrorWord = (cWord & 0x00001FFF);
-
-    std::cout << RED << std::hex << cWord << std::dec << " Error: Channel " << cChannel  << " Marker " << cMarker << " L1ACtr " << cL1Actr;
+    if(ENE == 1) std::cout << RED << std::hex << cWord << std::dec << " Error: Channel " << cChannel  << " Marker " << cMarker << " L1ACtr <15:8> " << cL1Actr;
+    else std::cout << RED << std::hex << cWord << std::dec << " Error: Channel " << cChannel  << " Marker " << cMarker << " L1ACtr " << cL1Actr;
     //std::hex << " Word 0x" << cErrorWord << RESET << std::endl;
 
     switch (cMarker)
@@ -851,16 +950,28 @@ void PixFEDFWInterface::prettypPrintErrors (const uint32_t& cWord)
             break;
 
         case 31:
-            std::cout << " TBM EventNumber " << (cWord & 0x000000FF);
+            if(ENE == 0){ 
+                std::cout << " TBM EventNumber " << (cWord & 0x000000FF);
+                ENE = 1;
+            }
+            else if(ENE == 1){
+                std::cout << " L1ACtr <7:0> " << (cWord & 0x000000FF);
+                ENE = 2;
+            }
+            else if(ENE == 2){
+                std::cout << " L1ACtr <23:16> " << (cWord & 0x000000FF);
+                ENE = 0;
+            }
             break;
 
         case 30:
             //std::cout << std::hex << " ErrBits " << ( (cWord & 0xF00) >> 7) << " TBM Trailer Status " << (cWord & 0x000000FF); // Bora - ErrBits need to be shifted by 8 bits
             std::cout << std::hex << " ErrBits " << ( (cWord & 0xF00) >> 8) << " TBM Trailer Status " << (cWord & 0x000000FF);
             break;
-    }
+ }
 
     std::cout << RESET << std::endl;
+    return ENE;
 }
 
 bool PixFEDFWInterface::ConfigureBoard ( const PixFED* pPixFED, bool pFakeData )
@@ -869,28 +980,43 @@ bool PixFEDFWInterface::ConfigureBoard ( const PixFED* pPixFED, bool pFakeData )
     PrintSlinkStatus();
     std::vector< std::pair<std::string, uint32_t> > cVecReg;
 
-    std::chrono::milliseconds cPause ( 200 );
     //Primary Configuration
     WriteReg ( "pixfed_ctrl_regs.PC_CONFIG_OK", 0 );
     std::cout << "PC_CONFIG_OK (0) in Configure" << std::endl;
-
-    WriteReg("pixfed_ctrl_regs.reset_all_clocks", 1);
-    usleep(10000);
+    
+    //The order of resets here is done for firmware versions 10.1 and higher
+    std::cout << "Resetting all clocks" << std::endl;
+    WriteReg ( "pixfed_ctrl_regs.reset_all_clocks", 1);
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
     WriteReg("pixfed_ctrl_regs.reset_all_clocks", 0);
-    usleep(10000);
-
-    WriteReg("pixfed_ctrl_regs.sw_TTC_decod_reset", 1);
-    usleep(10000);
-    WriteReg("pixfed_ctrl_regs.sw_TTC_decod_reset", 0);
-    usleep(10000);
-
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
+    
+    std::cout << "Resetting ttc clock" << std::endl;
+    WriteReg ( "pixfed_ctrl_regs.sw_ttc_decod_reset", 1);
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
+    WriteReg("pixfed_ctrl_regs.sw_ttc_decod_reset", 0);
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
+    
+    std::cout << "Resetting TTS link to AMC13" << std::endl;
+    WriteReg ( "pixfed_ctrl_regs.sw_AMC13Link_reset", 1);
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
+    WriteReg("pixfed_ctrl_regs.sw_AMC13Link_reset", 0);
+    sleep(0.5);
+    //AKBAD: these pauses are by a factor of 50 shorter than what Jordan had in the online code.
+    
+    
+    
     //cVecReg.push_back ( {"pixfed_ctrl_regs.rx_index_sel_en", 0} );
     cVecReg.push_back ( {"pixfed_ctrl_regs.DDR0_end_readout", 0} );
     cVecReg.push_back ( {"pixfed_ctrl_regs.DDR1_end_readout", 0} );
-
+    
     // fitel I2C bus reset & fifo TX & RX reset
     cVecReg.push_back ({"pixfed_ctrl_regs.fitel_i2c_cmd_reset", 1});
-
 
     // the FW needs to be aware of the true 32 bit workd Block size for some reason! This is the Packet_nb_true in the python script?!
     computeBlockSize ( pFakeData );
@@ -912,15 +1038,15 @@ bool PixFEDFWInterface::ConfigureBoard ( const PixFED* pPixFED, bool pFakeData )
     WriteStackReg ( cVecReg );
 
     //WriteReg ( "pixfed_ctrl_regs.PC_CONFIG_OK", 1 );
-
+    
     cVecReg.clear();
 
     fAcq_mode = ReadReg ("pixfed_ctrl_regs.acq_ctrl.acq_mode");
     fNEvents_calmode = ReadReg ("pixfed_ctrl_regs.acq_ctrl.calib_mode_NEvents") + 1;
     fCalibMode = ReadReg ("pixfed_ctrl_regs.acq_ctrl.calib_mode");
-
-    std::this_thread::sleep_for ( cPause );
-
+    
+    sleep(0.2);   
+ 
     std::cout << RED << "Base Config done!" << RESET << std::endl;
 
     getSFPStatus (0);
@@ -938,6 +1064,8 @@ bool PixFEDFWInterface::ConfigureBoard ( const PixFED* pPixFED, bool pFakeData )
     std::cout << "Slink status after configure:" << std::endl;
     PrintSlinkStatus();
     // Read back the DDR3 calib done flag
+
+    usleep(10000);
     bool cDDR3calibrated = ( ReadReg ( "pixfed_stat_regs.ddr3_init_calib_done" ) & 0x00000001 );
 
     if ( cDDR3calibrated ) std::cout << "DDR3 calibrated, board configured!" << std::endl;
@@ -982,6 +1110,873 @@ void PixFEDFWInterface::Resume()
     WriteReg ( "pixfed_ctrl_regs.INT_TRIGGER_EN", 1 );
 }
 
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::RegDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > DDR_reg;
+	DDR_reg.push_back({"ddr3_init_calib_done" ,	ReadReg("pixfed_stat_regs.ddr3_init_calib_done")		});
+	DDR_reg.push_back({"DDR0_full" ,		ReadReg("pixfed_stat_regs.DDR0_full")				});
+	DDR_reg.push_back({"DDR1_full" ,		ReadReg("pixfed_stat_regs.DDR1_full")				});
+	DDR_reg.push_back({"fitel_i2c_ack" ,		ReadReg("pixfed_stat_regs.fitel_i2c_ack")			});
+	DDR_reg.push_back({"fitel_config_fifo_rx_empty",ReadReg("pixfed_stat_regs.fitel_config_fifo_rx_empty")		});
+	DDR_reg.push_back({"calibModeOvf" ,		ReadReg("pixfed_stat_regs.calibModeOvf")			});
+	DDR_reg.push_back({"TTS_FSM_STAGE" ,		ReadReg("pixfed_stat_regs.TTS_FSM_STAGE")			});
+	DDR_reg.push_back({"DAQ_FEROL_VALID" ,		ReadReg("pixfed_stat_regs.DAQ_FEROL_VALID")			});
+	DDR_reg.push_back({"cnt_word32from_start" ,	ReadReg("pixfed_stat_regs.cnt_word32from_start")		});
+	DDR_reg.push_back({"L1ACnt" ,			ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt")			});
+	DDR_reg.push_back({"L1ACnt_BUFIN_EMPTY" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFIN_EMPTY")	});
+	DDR_reg.push_back({"L1ACnt_BUFIN_FULL" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFIN_FULL")	});
+	DDR_reg.push_back({"L1ACnt_BUFIN_OVF" ,		ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFIN_OVF")	});
+	DDR_reg.push_back({"L1ACnt_BUFIN_PROG_EMPTY" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFIN_PROG_EMPTY")	});
+	DDR_reg.push_back({"L1ACnt_BUFIN_PROG_FULL" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFIN_PROG_FULL")	});
+	DDR_reg.push_back({"MAIN_FIFO_EMPTY" ,		ReadReg("pixfed_stat_regs.L1A_counter.MAIN_FIFO_EMPTY")		});
+	DDR_reg.push_back({"MAIN_FIFO_FULL" ,		ReadReg("pixfed_stat_regs.L1A_counter.MAIN_FIFO_FULL")		});
+	DDR_reg.push_back({"MAIN_FIFO_OVF" ,		ReadReg("pixfed_stat_regs.L1A_counter.MAIN_FIFO_OVF")		});
+	DDR_reg.push_back({"L1ACnt_BUFOUT_EMPTY" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFOUT_EMPTY")	});
+	DDR_reg.push_back({"L1ACnt_BUFOUT_FULL" ,	ReadReg("pixfed_stat_regs.L1A_counter.L1ACnt_BUFOUT_FULL")	});
+	DDR_reg.push_back({"CntWord32Buf_EMPTY" ,	ReadReg("pixfed_stat_regs.CntWord32Buf_EMPTY")			});
+	DDR_reg.push_back({"CntWord32Buf_FULL" ,	ReadReg("pixfed_stat_regs.CntWord32Buf_FULL")			});
+	DDR_reg.push_back({"main_fifo_prog_full" ,      ReadReg("pixfed_stat_regs.MAIN_FIFO_PROG_FULL")                 });
+	return DDR_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::EventErrorDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_00" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_00" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_01" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_02" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_03" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_04" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_05" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_06" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_07" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_08" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_09" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_10" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_11" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_12" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_13" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_14" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_15" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_16" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_17" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_18" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_19" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_20" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_21" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_22" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_23" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_24" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_25" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_26" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_27" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_28" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_29" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_30" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_31" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_32" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_33" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_34" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_35" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_36" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_37" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_38" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_39" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_40" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_41" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_42" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_43" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_44" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_45" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_46" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_err_nb.tbm_ch_47" , ReadReg("pixfed_stat_regs.evt_err_nb.tbm_ch_47" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::EventTimeoutDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_00" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_00" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_01" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_02" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_03" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_04" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_05" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_06" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_07" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_08" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_09" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_10" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_11" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_12" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_13" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_14" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_15" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_16" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_17" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_18" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_19" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_20" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_21" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_22" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_23" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_24" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_25" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_26" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_27" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_28" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_29" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_30" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_31" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_32" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_33" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_34" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_35" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_36" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_37" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_38" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_39" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_40" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_41" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_42" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_43" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_44" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_45" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_46" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.evt_timeout_nb.tbm_ch_47" , ReadReg("pixfed_stat_regs.evt_timeout_nb.tbm_ch_47" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::EventResyncAheadDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_01" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_02" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_03" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_04" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_05" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_06" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_07" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_08" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_09" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_10" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_11" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_12" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_13" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_14" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_15" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_16" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_17" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_18" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_19" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_20" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_21" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_22" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_23" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_24" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_25" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_26" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_27" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_28" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_29" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_30" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_31" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_32" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_33" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_34" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_35" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_36" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_37" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_38" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_39" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_40" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_41" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_42" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_43" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_44" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_45" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_46" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_47" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_48" , ReadReg("pixfed_stat_regs.cnt_evtResyncAheadBy1.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::TBMHeaderIDErrorDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_01" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_02" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_03" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_04" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_05" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_06" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_07" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_08" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_09" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_10" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_11" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_12" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_13" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_14" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_15" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_16" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_17" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_18" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_19" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_20" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_21" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_22" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_23" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_24" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_25" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_26" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_27" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_28" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_29" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_30" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_31" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_32" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_33" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_34" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_35" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_36" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_37" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_38" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_39" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_40" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_41" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_42" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_43" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_44" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_45" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_46" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_47" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_48" , ReadReg("pixfed_stat_regs.cnt_TBM_H_ID_err.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::TBMTrailerIDErrorDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_01" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_02" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_03" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_04" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_05" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_06" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_07" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_08" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_09" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_10" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_11" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_12" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_13" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_14" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_15" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_16" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_17" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_18" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_19" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_20" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_21" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_22" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_23" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_24" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_25" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_26" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_27" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_28" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_29" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_30" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_31" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_32" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_33" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_34" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_35" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_36" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_37" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_38" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_39" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_40" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_41" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_42" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_43" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_44" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_45" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_46" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_47" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.cnt_trailer_err.tbm_ch_48" , ReadReg("pixfed_stat_regs.cnt_trailer_err.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::OOSCountErrorDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_01" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_02" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_03" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_04" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_05" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_06" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_07" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_08" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_09" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_10" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_11" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_12" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_13" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_14" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_15" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_16" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_17" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_18" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_19" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_20" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_21" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_22" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_23" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_24" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_25" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_26" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_27" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_28" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_29" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_30" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_31" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_32" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_33" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_34" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_35" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_36" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_37" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_38" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_39" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_40" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_41" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_42" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_43" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_44" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_45" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_46" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_47" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_48" , ReadReg("pixfed_stat_regs.OOS_auto_mask_cnt.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::PacketCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_01" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_02" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_03" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_04" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_05" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_06" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_07" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_08" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_09" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_10" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_11" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_12" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_13" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_14" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_15" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_16" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_17" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_18" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_19" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_20" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_21" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_22" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_23" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_24" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_25" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_26" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_27" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_28" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_29" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_30" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_31" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_32" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_33" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_34" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_35" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_36" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_37" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_38" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_39" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_40" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_41" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_42" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_43" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_44" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_45" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_46" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_47" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.pkt_cnt.tbm_ch_48" , ReadReg("pixfed_stat_regs.pkt_cnt.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::TrailerCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_01" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_02" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_03" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_04" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_05" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_06" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_07" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_08" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_09" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_10" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_11" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_12" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_13" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_14" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_15" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_16" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_17" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_18" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_19" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_20" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_21" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_22" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_23" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_24" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_25" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_26" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_27" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_28" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_29" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_30" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_31" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_32" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_33" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_34" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_35" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_36" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_37" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_38" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_39" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_40" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_41" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_42" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_43" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_44" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_45" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_46" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_47" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.trailer_cnt.tbm_ch_48" , ReadReg("pixfed_stat_regs.trailer_cnt.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::ENECountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ENE.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.ENE.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::TOCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.TO.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.TO.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::PKAMCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.PKAM.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::NTPCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.NTP.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.NTP.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::ROC_NBR_ERRCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.ROC_NBR_ERR.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::OVFCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.OVF.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.OVF.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::AUTORESETCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_01" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_01" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_02" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_02" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_03" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_03" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_04" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_04" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_05" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_05" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_06" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_06" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_07" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_07" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_08" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_08" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_09" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_09" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_10" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_10" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_11" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_11" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_12" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_12" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_13" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_13" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_14" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_14" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_15" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_15" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_16" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_16" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_17" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_17" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_18" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_18" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_19" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_19" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_20" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_20" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_21" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_21" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_22" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_22" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_23" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_23" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_24" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_24" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_25" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_25" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_26" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_26" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_27" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_27" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_28" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_28" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_29" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_29" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_30" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_30" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_31" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_31" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_32" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_32" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_33" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_33" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_34" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_34" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_35" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_35" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_36" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_36" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_37" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_37" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_38" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_38" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_39" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_39" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_40" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_40" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_41" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_41" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_42" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_42" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_43" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_43" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_44" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_44" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_45" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_45" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_46" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_46" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_47" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_47" ) });
+	Counter_reg.push_back({"pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_48" , ReadReg("pixfed_stat_regs.diag_cnt.AUTORESET.tbm_ch_48" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::GLIBHeaderCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"HeaderID_tbm_ch_1" , ReadReg("HeaderID_tbm_ch_1" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_2" , ReadReg("HeaderID_tbm_ch_2" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_3" , ReadReg("HeaderID_tbm_ch_3" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_4" , ReadReg("HeaderID_tbm_ch_4" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_5" , ReadReg("HeaderID_tbm_ch_5" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_6" , ReadReg("HeaderID_tbm_ch_6" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_7" , ReadReg("HeaderID_tbm_ch_7" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_8" , ReadReg("HeaderID_tbm_ch_8" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_9" , ReadReg("HeaderID_tbm_ch_9" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_10" , ReadReg("HeaderID_tbm_ch_10" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_11" , ReadReg("HeaderID_tbm_ch_11" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_12" , ReadReg("HeaderID_tbm_ch_12" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_13" , ReadReg("HeaderID_tbm_ch_13" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_14" , ReadReg("HeaderID_tbm_ch_14" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_15" , ReadReg("HeaderID_tbm_ch_15" ) });
+	Counter_reg.push_back({"HeaderID_tbm_ch_16" , ReadReg("HeaderID_tbm_ch_16" ) });
+	return Counter_reg;
+}
+
+std::vector<std::pair<std::string, uint32_t> > PixFEDFWInterface::GLIBTrailerCountDump( PixFED* pPixFED, uint32_t pBlockSize ){
+	std::vector<std::pair<std::string, uint32_t> > Counter_reg;
+	Counter_reg.push_back({"TrailerID_tbm_ch_1" , ReadReg("TrailerID_tbm_ch_1" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_2" , ReadReg("TrailerID_tbm_ch_2" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_3" , ReadReg("TrailerID_tbm_ch_3" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_4" , ReadReg("TrailerID_tbm_ch_4" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_5" , ReadReg("TrailerID_tbm_ch_5" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_6" , ReadReg("TrailerID_tbm_ch_6" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_7" , ReadReg("TrailerID_tbm_ch_7" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_8" , ReadReg("TrailerID_tbm_ch_8" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_9" , ReadReg("TrailerID_tbm_ch_9" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_10" , ReadReg("TrailerID_tbm_ch_10" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_11" , ReadReg("TrailerID_tbm_ch_11" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_12" , ReadReg("TrailerID_tbm_ch_12" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_13" , ReadReg("TrailerID_tbm_ch_13" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_14" , ReadReg("TrailerID_tbm_ch_14" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_15" , ReadReg("TrailerID_tbm_ch_15" ) });
+	Counter_reg.push_back({"TrailerID_tbm_ch_16" , ReadReg("TrailerID_tbm_ch_16" ) });
+	return Counter_reg;
+}
+
+
+
 std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pBlockSize )
 {
     //readTTSState();
@@ -998,11 +1993,10 @@ std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pB
     do
     {
         cVal = ReadReg ( fStrFull );
-
 	//std::cout << "Do loop" << std::endl;
 
         if ( cVal == 0 ) {std::this_thread::sleep_for ( cWait ); i++;}
-	if (i == 5000) break;
+        if (i == 200) break; 
     }
     while ( cVal == 0 );
 
@@ -1039,7 +2033,7 @@ std::vector<uint32_t> PixFEDFWInterface::ReadData ( PixFED* pPixFED, uint32_t pB
     else if (fAcq_mode == 2) prettyprintSlink (expandto64 (cData) );
 
     if (!fCalibMode) fNthAcq++;
-
+    
     //readTTSState();
     return cData;
 }
@@ -1112,7 +2106,7 @@ void PixFEDFWInterface::prettyprintSlink (const std::vector<uint64_t>& pData )
             std::cout << BOLDGREEN << "Evt. ty " << ( (cWord >> 56) & 0xF ) << " L1A Id " << ( (cWord >> 32) & 0xFFFFFF) << " BX Id " << ( (cWord >> 20) & 0xFFF ) << " Source Id " << ( (cWord >> 8) & 0xFFF) << " FOV " << ( (cWord >> 4) & 0xF) << RESET << std::endl;
 
         }
-        else if ( (cWord >> 60) == 0xa && (((cWord >> 54) & 0x3F) == 0x0))
+        else if ( (cWord >> 60) == 0xa && (((cWord >> 53) & 0x3F) == 0x0))
         {
             //Trailer
             Head = 0;

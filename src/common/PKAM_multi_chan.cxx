@@ -29,9 +29,9 @@ int main( int argc, char* argv[] ) {
   int Which_Chan = 0;
   int Number_Channels = 0;
 
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_9" );
 
   if(argc == 1){
 	std::cout << "What PKAM value do you want?" << std::endl;

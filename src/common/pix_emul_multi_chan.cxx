@@ -20,8 +20,10 @@ int main( int argc, char* argv[] ){
   int PKAM = 0;
   int PKAM_En = 0;
   int ROC_Clk = 0;
-  int Hits_CHA = 0;
-  int Hits_CHB = 0;
+  int Hits_CHA1 = 0;
+  int Hits_CHA2 = 0;
+  int Hits_CHB1 = 0;
+  int Hits_CHB2 = 0;
   int Reset = 0;
   int Which_Chan = 0;
   int Number_Channels = 0;
@@ -29,10 +31,10 @@ int main( int argc, char* argv[] ){
   string ROCSB[ 8 ] = {"CHB_ROC0_", "CHB_ROC1_", "CHB_ROC2_", "CHB_ROC3_", "CHB_ROC4_", "CHB_ROC5_", "CHB_ROC6_", "CHB_ROC7_"};
   string Chan[ 8 ] = {"0", "1", "2", "3", "4", "5", "6", "7"};
 
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
-  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_3" );   //this is to glib with the optical card
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_11" );  //this is the glib with the debug card
-  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_9" );
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
+  HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );   //this is to glib with the optical card
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_10" );  //this is the glib with the debug card
+  HwInterface hw3=manager.getDevice ( "GLIB.crate.slot_4" );
 
   if( argc == 1 ) {
   std::cout << "What kind of Test?" << std::endl;
@@ -43,9 +45,11 @@ int main( int argc, char* argv[] ){
   std::cout << "		Format: 0x(dataB)(dataA)(MatrixB)(MatrixA)(HitROCB)(HitROCA)(ROCSB)(ROCSA)" << std::endl;	
   std::cout << "2. How many hits in each ROC" << std::endl;
   std::cout << "	How many hits do you want in CHA?" << std::endl;
-  std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+  std::cout << "		Format: 0x(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+  std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)" << std::endl;
   std::cout << "	How many hits do you want in CHB?" << std::endl;
-  std::cout << "		Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+  std::cout << "		Format: 0x(ROC3)(ROC2)(ROC1)(ROC0)" << std::endl;
+  std::cout << "                Format: 0x(ROC7)(ROC6)(ROC5)(ROC4)" << std::endl; 
   std::cout << "3. Scan through pixels" << std::endl;
   std::cout << "	Number of Pixel Columns? (6 bits)" << std::endl;
   std::cout << "	Number of Pixel Rows? (9 bits)" << std::endl;
@@ -136,48 +140,84 @@ int main( int argc, char* argv[] ){
     }
 
     else if( atoi(argv[3]) == 2){
-        Hits_CHA = strtol(argv[4], NULL, 16);
-        Hits_CHB = strtol(argv[5], NULL, 16);
+        Hits_CHA1 = strtol(argv[4], NULL, 16);
+	Hits_CHA2 = strtol(argv[5], NULL, 16);
+        Hits_CHB1 = strtol(argv[6], NULL, 16);
+        Hits_CHB2 = strtol(argv[7], NULL, 16);
         ValWord < uint32_t > mem2;
         ValWord < uint32_t > mem;
 	ValWord < uint32_t > mem3;
 
         for (int i = 0; i < 8; i++){
-            string CHA_Hits ("CHA_Hits_");
-            string CHB_Hits ("CHB_Hits_");
+            string CHA_Hits1 ("CHA_Hits_1_");
+            string CHA_Hits2 ("CHA_Hits_2_");
+            string CHB_Hits1 ("CHB_Hits_1_");
+            string CHB_Hits2 ("CHB_Hits_2_");
 	    if((Number_Channels & 0x1) == 1){
-              CHA_Hits += Chan[i];
-              CHB_Hits += Chan[i];
+              CHA_Hits1 += Chan[i];
+              CHA_Hits2 += Chan[i];
+              CHB_Hits1 += Chan[i];
+              CHB_Hits2 += Chan[i];
 
-              hw.getNode(CHA_Hits).write( Hits_CHA );
-              mem = hw.getNode (CHA_Hits).read();
+              hw.getNode(CHA_Hits1 ).write( Hits_CHA1 );
+              mem = hw.getNode (CHA_Hits1 ).read();
               hw.dispatch();
-              std::cout << CHA_Hits << " = " << std::hex << mem.value() << std::endl;
+              std::cout << CHA_Hits1  << " = " << std::hex << mem.value() << std::endl;
 
-              hw.getNode(CHB_Hits).write( Hits_CHB );
-              mem = hw.getNode (CHB_Hits).read();
+              hw.getNode(CHB_Hits1 ).write( Hits_CHB1 );
+              mem = hw.getNode (CHB_Hits1 ).read();
               hw.dispatch();
-              std::cout << CHB_Hits << " = " << std::hex << mem.value() << std::endl;
+              std::cout << CHB_Hits1  << " = " << std::hex << mem.value() << std::endl;
 
-              hw2.getNode(CHA_Hits).write( Hits_CHA );
-              mem2 = hw2.getNode (CHA_Hits).read();
+              hw2.getNode(CHA_Hits1 ).write( Hits_CHA1 );
+              mem2 = hw2.getNode (CHA_Hits1 ).read();
               hw2.dispatch();
-              std::cout << CHA_Hits << " = " << std::hex << mem2.value() << std::endl;
+              std::cout << CHA_Hits1  << " = " << std::hex << mem2.value() << std::endl;
    
-              hw2.getNode(CHB_Hits).write( Hits_CHB );
-              mem2 = hw2.getNode (CHB_Hits).read();
+              hw2.getNode(CHB_Hits1 ).write( Hits_CHB1 );
+              mem2 = hw2.getNode (CHB_Hits1 ).read();
               hw2.dispatch();
-              std::cout << CHB_Hits << " = " << std::hex << mem2.value() << std::endl;
+              std::cout << CHB_Hits1  << " = " << std::hex << mem2.value() << std::endl;
 
-	      hw3.getNode(CHA_Hits).write( Hits_CHA );
-              mem3 = hw3.getNode (CHA_Hits).read();
+	      hw3.getNode(CHA_Hits1 ).write( Hits_CHA1 );
+              mem3 = hw3.getNode (CHA_Hits1 ).read();
               hw3.dispatch();
-              std::cout << CHA_Hits << " = " << std::hex << mem3.value() << std::endl;
+              std::cout << CHA_Hits1  << " = " << std::hex << mem3.value() << std::endl;
 
-              hw3.getNode(CHB_Hits).write( Hits_CHB );
-              mem3 = hw3.getNode (CHB_Hits).read();
+              hw3.getNode(CHB_Hits1 ).write( Hits_CHB1 );
+              mem3 = hw3.getNode (CHB_Hits1 ).read();
               hw3.dispatch();
-              std::cout << CHB_Hits << " = " << std::hex << mem3.value() << std::endl;
+              std::cout << CHB_Hits1  << " = " << std::hex << mem3.value() << std::endl;
+
+              hw.getNode(CHA_Hits2 ).write( Hits_CHA2 );
+              mem = hw.getNode (CHA_Hits2 ).read();
+              hw.dispatch();
+              std::cout << CHA_Hits2 << " = " << std::hex << mem.value() << std::endl;
+
+              hw.getNode(CHB_Hits2 ).write( Hits_CHB2 );
+              mem = hw.getNode (CHB_Hits2 ).read();
+              hw.dispatch();
+              std::cout << CHB_Hits2 << " = " << std::hex << mem.value() << std::endl;
+
+              hw2.getNode(CHA_Hits2 ).write( Hits_CHA2 );
+              mem2 = hw2.getNode (CHA_Hits2 ).read();
+              hw2.dispatch();
+              std::cout << CHA_Hits2 << " = " << std::hex << mem2.value() << std::endl;
+   
+              hw2.getNode(CHB_Hits2 ).write( Hits_CHB2 );
+              mem2 = hw2.getNode (CHB_Hits2 ).read();
+              hw2.dispatch();
+              std::cout << CHB_Hits2 << " = " << std::hex << mem2.value() << std::endl;
+
+	      hw3.getNode(CHA_Hits2 ).write( Hits_CHA2 );
+              mem3 = hw3.getNode (CHA_Hits2 ).read();
+              hw3.dispatch();
+              std::cout << CHA_Hits2 << " = " << std::hex << mem3.value() << std::endl;
+
+              hw3.getNode(CHB_Hits2 ).write( Hits_CHB2 );
+              mem3 = hw3.getNode (CHB_Hits2 ).read();
+              hw3.dispatch();
+              std::cout << CHB_Hits2 << " = " << std::hex << mem3.value() << std::endl;
             }
 	    Number_Channels = Number_Channels >> 4;
         }
@@ -317,8 +357,8 @@ int main( int argc, char* argv[] ){
     }
 
     else if( atoi(argv[3]) == 5 ){
-        Hits_CHA = strtol(argv[7], NULL, 16);
-        Hits_CHB = strtol(argv[8], NULL, 16);
+        int Hits_CHA = strtol(argv[7], NULL, 16);
+        int Hits_CHB = strtol(argv[8], NULL, 16);
         ValWord < uint32_t > mem3, mem4, mem6;
 
         hw.getNode("CHA_Hits").write( Hits_CHA );

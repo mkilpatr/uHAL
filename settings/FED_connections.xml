@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connections>
+  <connection id="fedtestfed4" uri="chtcp-2.0://cmsuppixch:10203?target=fedtestfed4:50001"  address_table="file://address_table.xml" />
+</connections>
+

@@ -1,4 +1,4 @@
-Objs            = RegManager.o PixFEDFWInterface.o FpgaConfig.o CtaFpgaConfig.o Firmware.o PixFEDInterface.o MmcPipeInterface.o
+Objs            = RegManager.o PixFEDFWInterface.o PixGLIBFWInterface.o FpgaConfig.o CtaFpgaConfig.o Firmware.o PixFEDInterface.o PixGLIBInterface.o MmcPipeInterface.o
 CC              = gcc
 CXX             = g++
 CCFlags         = -g -O1 -w -Wall -pedantic -fPIC  -Wcpp

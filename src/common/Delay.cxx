@@ -33,9 +33,9 @@ int main( int argc, char* argv[] ) {
   //h1.GetXaxis().SetTitle("Number of Bunches");
   //h1.GetYaxis().SetTitle("Count");
 
-  ConnectionManager manager ("file://test/dummy_connections_multi_chan.xml");
+  ConnectionManager manager ("file:/settings/GLIB_connections.xml");
   HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
-  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_3" );
+  HwInterface hw2=manager.getDevice ( "GLIB.crate.slot_9" );
 
   if(argc == 1){
 	std::cout << "Pick a delay value and reset" << std::endl;

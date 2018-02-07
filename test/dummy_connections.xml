@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<connections >
-
-  <!-- DUMMY UDP -->
-  <connection id="GLIB.crate.slot_3" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.163:50001" address_table="file://addr_table.xml" />
-  <connection id="GLIB.crate.slot_11" uri="chtcp-2.0://cmsuppixpc001:10203?target=192.168.1.171:50001" address_table="file://addr_table.xml" />
-</connections>
-

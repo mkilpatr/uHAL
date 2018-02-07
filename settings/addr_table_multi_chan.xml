@@ -4,15 +4,54 @@
 	<node id="Fitel_ctrl_fifo_rx" address="0x40100001"/>
 	<node id="user_ctrl_regs" address="0x40000040"/>
 	<node id="user_stat_regs" address="0x40000041"/>
+	<node id="Read_SRAM_test" address="0x041FF000"/>
 	<node id="L1A_count" address="0x40040000"/>
 	<node id="Orbit_count" address="0x40040001"/>
 	<node id="Bunch_count" address="0x40040002"/>
-	<node id="user_iphc_ascii_01" address="0x80000000"/>
-	<node id="user_iphc_ascii_02" address="0x80000001"/>
-	<node id="user_rice_ascii_01" address="0x80000002"/>
-	<node id="user_rice_ascii_02" address="0x80000003"/>
-	<node id="user_rice_fw_ver_year" address="0x80000004"/>
-	<node id="Read_05" address="0x80000005"/>
+	<node id="user_iphc_ascii_01" address="0x80000000" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_iphc_ascii_02" address="0x80000001" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_rice_ascii_01" address="0x80000002" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_rice_ascii_02" address="0x80000003" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_rice_ascii_03" address="0x80000004" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_rice_ascii_04" address="0x80000005" permission="r" >
+  		<node id="char1" mask="0xff000000" />
+  		<node id="char2" mask="0x00ff0000" />
+  		<node id="char3" mask="0x0000ff00" />
+  		<node id="char4" mask="0x000000ff" />
+	</node>
+	<node id="user_rice_fw_ver_year" address="0x80000006" permission="r" >
+  		<node id="ver_major" mask="0x0000f000"   />
+  		<node id="ver_minor" mask="0x00000f00"   />
+  		<node id="ver_build" mask="0x000000ff"   />
+  		<node id="firmware_yy" mask="0xfe000000" />
+  		<node id="firmware_mm" mask="0x01e00000" />
+  		<node id="firmware_dd" mask="0x001f0000" />
+	</node>
 	<node id="Read_06" address="0x80000006"/>
 	<node id="Random_Number" address="0x80000007"/>
 	<node id="Read_08" address="0x80000008"/>
@@ -24,226 +63,706 @@
 	<node id="Read_14" address="0x8000000e"/>
 	<node id="Read_15" address="0x8000000f"/>
 	<node id="pix_emul_0" address="0x80000010"/>
-	<node id="Cal_Trigger" address="0x80000011"/>
-        <node id="Delay_Signal" address="0x80000011"/>
-	<node id="Random_Reset" address="0x80000011"/>
-	<node id="Random_Threshold" address="0x80000012"/>
+	<node id="Delay_Signal"      address="0x80000011" mask="0x000001FF"/>
+    <node id="Delay_Reset"       address="0x80000011" mask="0x00000200"/>
+    <node id="TTC_Reset"         address="0x80000011" mask="0x00000400"/>
+    <node id="Random_Reset"      address="0x80000011" mask="0x00000800"/>
+    <node id="CSR_Mode"          address="0x80000011" mask="0x00003000"/>
+    <node id="TBM_version"       address="0x80000011" mask="0x0000C000"/>
+    <node id="Wea1_en"           address="0x80000011" mask="0x00010000"/> 
+    <node id="Wea1_cs"           address="0x80000011" mask="0x00020000"/> 
+    <node id="Wea2_en"           address="0x80000011" mask="0x00040000"/> 
+    <node id="Wea2_cs"           address="0x80000011" mask="0x00080000"/> 
+    <node id="Wea"               address="0x80000011" mask="0x00100000"/> 
+    <node id="SRAM_w_1Hit_force" address="0x80000011" mask="0x00200000" />
+    <node id="ADCAsEvn"          address="0x80000011" mask="0x00400000"/>
+    <node id="SRAM_FIFO_Clear"   address="0x80000011" mask="0x00800000" />
+    <node id="TTSState"          address="0x80000011" mask="0x0f000000"/>
+    <node id="user_reset"        address="0x80000011" mask="0x40000000"/>
+    <node id="SRAM_linear"       address="0x80000011" mask="0x80000000" />"
+    <node id="Random_Threshold"  address="0x80000012" mask="0xFFFFFFFF"/>
+	<node id="Test_write" address="0x80000400" />
+	<node id="SRAM1_block" address="0x02000000" mode="incremental" size="0x1FFFFF" permission="rw" />
+	<node id="SRAM2_block" address="0x04000000" mode="incremental" size="0x1FFFFF" permission="rw" />
+	<node id="SRAM2_read"  address="0x0207F000" />
+	<node id="SRAM1_addr"  address="0x8000011C" />
+	<node id="SRAM2_addr"  address="0x8000011D" />
+	<node id="SRAM1_WData" address="0x8000011E" />
+	<node id="SRAM2_WData" address="0x8000011F" />
+	<!--node id="SRAM1_RData" address="0x800000f8" />
+	<node id="SRAM2_RData" address="0x800000f9" /-->
+	<node id="read_data" address="0x04001000" />
+	<node id="firmware"    address="0x00000000" />
+	<node id="sys_regs"    address="0x00000008" />
+	<node id="sram1_user_logic" address="0x00000008" mask="0x00000001" />
+	<node id="sram2_user_logic" address="0x00000008" mask="0x00010000" />
+	<node id="flash_select"     address="0x00000008" mask="0x00100000" />
+	<node id="sys_status"  address="ox00000009" />
+	<node id="SEU" permission="rw" >
+		<node id="Enable_1"   address="0x80000120" mask="0x00000001" />
+		<node id="Type_1"     address="0x80000120" mask="0x00000006" />
+		<node id="Mode_1"     address="0x80000120" mask="0x00000018" />
+		<node id="Trigger_1"  address="0x80000120" mask="0x00000060" />
+		<node id="Enable_2"   address="0x80000120" mask="0x00000400" />
+		<node id="Type_2"     address="0x80000120" mask="0x00001800" />
+		<node id="Mode_2"     address="0x80000120" mask="0x00006000" />
+		<node id="Trigger_2"  address="0x80000120" mask="0x00018000" />
+		<node id="Enable_3"   address="0x80000121" mask="0x00000001" />
+		<node id="Type_3"     address="0x80000121" mask="0x00000006" />
+		<node id="Mode_3"     address="0x80000121" mask="0x00000018" />
+		<node id="Trigger_3"  address="0x80000121" mask="0x00000060" />
+		<node id="Enable_4"   address="0x80000121" mask="0x00000400" />
+		<node id="Type_4"     address="0x80000121" mask="0x00001800" />
+		<node id="Mode_4"     address="0x80000121" mask="0x00006000" />
+		<node id="Trigger_4"  address="0x80000121" mask="0x00018000" />
+		<node id="Enable_5"   address="0x80000122" mask="0x00000001" />
+		<node id="Type_5"     address="0x80000122" mask="0x00000006" />
+		<node id="Mode_5"     address="0x80000122" mask="0x00000018" />
+		<node id="Trigger_5"  address="0x80000122" mask="0x00000060" />
+		<node id="Enable_6"   address="0x80000122" mask="0x00000400" />
+		<node id="Type_6"     address="0x80000122" mask="0x00001800" />
+		<node id="Mode_6"     address="0x80000122" mask="0x00006000" />
+		<node id="Trigger_6"  address="0x80000122" mask="0x00018000" />
+		<node id="Enable_7"   address="0x80000123" mask="0x00000001" />
+		<node id="Type_7"     address="0x80000123" mask="0x00000006" />
+		<node id="Mode_7"     address="0x80000123" mask="0x00000018" />
+		<node id="Trigger_7"  address="0x80000123" mask="0x00000060" />
+		<node id="Enable_8"   address="0x80000123" mask="0x00000400" />
+		<node id="Type_8"     address="0x80000123" mask="0x00001800" />
+		<node id="Mode_8"     address="0x80000123" mask="0x00006000" />
+		<node id="Trigger_8"  address="0x80000123" mask="0x00018000" />
+		<node id="Enable_9"   address="0x80000124" mask="0x00000001" />
+		<node id="Type_9"     address="0x80000124" mask="0x00000006" />
+		<node id="Mode_9"     address="0x80000124" mask="0x00000018" />
+		<node id="Trigger_9"  address="0x80000124" mask="0x00000060" />
+		<node id="Enable_10"  address="0x80000124" mask="0x00000400" />
+		<node id="Type_10"    address="0x80000124" mask="0x00001800" />
+		<node id="Mode_10"    address="0x80000124" mask="0x00006000" />
+		<node id="Trigger_10" address="0x80000124" mask="0x00018000" />
+		<node id="Enable_11"  address="0x80000125" mask="0x00000001" />
+		<node id="Type_11"    address="0x80000125" mask="0x00000006" />
+		<node id="Mode_11"    address="0x80000125" mask="0x00000018" />
+		<node id="Trigger_11" address="0x80000125" mask="0x00000060" />
+		<node id="Enable_12"  address="0x80000125" mask="0x00000400" />
+		<node id="Type_12"    address="0x80000125" mask="0x00001800" />
+		<node id="Mode_12"    address="0x80000125" mask="0x00006000" />
+		<node id="Trigger_12" address="0x80000125" mask="0x00018000" />
+		<node id="Enable_13"  address="0x80000126" mask="0x00000001" />
+		<node id="Type_13"    address="0x80000126" mask="0x00000006" />
+		<node id="Mode_13"    address="0x80000126" mask="0x00000018" />
+		<node id="Trigger_13" address="0x80000126" mask="0x00000060" />
+		<node id="Enable_14"  address="0x80000126" mask="0x00000400" />
+		<node id="Type_14"    address="0x80000126" mask="0x00001800" />
+		<node id="Mode_14"    address="0x80000126" mask="0x00006000" />
+		<node id="Trigger_14" address="0x80000126" mask="0x00018000" />
+		<node id="Enable_15"  address="0x80000127" mask="0x00000001" />
+		<node id="Type_15"    address="0x80000127" mask="0x00000006" />
+		<node id="Mode_15"    address="0x80000127" mask="0x00000018" />
+		<node id="Trigger_15" address="0x80000127" mask="0x00000060" />
+		<node id="Enable_16"  address="0x80000127" mask="0x00000400" />
+		<node id="Type_16"    address="0x80000127" mask="0x00001800" />
+		<node id="Mode_16"    address="0x80000127" mask="0x00006000" />
+		<node id="Trigger_16" address="0x80000127" mask="0x00018000" />
+	</node>
+	<node id="Stack" permission="r" >
+		<node id="Count_tbm_ch_1"  address="0x40040023" mask="0x0000003f" />
+		<node id="Count_tbm_ch_2"  address="0x40040024" mask="0x0000003f" />
+		<node id="Data_tbm_ch_1"   address="0x40040025" mask="0xffffffff" />
+		<node id="Data_tbm_ch_2"   address="0x40040026" mask="0xffffffff" />
+		<node id="Count_tbm_ch_3"  address="0x40040027" mask="0x0000003f" />
+		<node id="Count_tbm_ch_4"  address="0x40040028" mask="0x0000003f" />
+		<node id="Data_tbm_ch_3"   address="0x40040029" mask="0xffffffff" />
+		<node id="Data_tbm_ch_4"   address="0x4004002a" mask="0xffffffff" />
+		<node id="Count_tbm_ch_5"  address="0x4004002b" mask="0x0000003f" />
+		<node id="Count_tbm_ch_6"  address="0x4004002c" mask="0x0000003f" />
+		<node id="Data_tbm_ch_5"   address="0x4004002d" mask="0xffffffff" />
+		<node id="Data_tbm_ch_6"   address="0x4004002e" mask="0xffffffff" />
+		<node id="Count_tbm_ch_7"  address="0x4004002f" mask="0x0000003f" />
+		<node id="Count_tbm_ch_8"  address="0x40040030" mask="0x0000003f" />
+		<node id="Data_tbm_ch_7"   address="0x40040031" mask="0xffffffff" />
+		<node id="Data_tbm_ch_8"   address="0x40040032" mask="0xffffffff" />
+		<node id="Count_tbm_ch_9"  address="0x40040033" mask="0x0000003f" />
+		<node id="Count_tbm_ch_10" address="0x40040034" mask="0x0000003f" />
+		<node id="Data_tbm_ch_9"   address="0x40040035" mask="0xffffffff" />
+		<node id="Data_tbm_ch_10"  address="0x40040036" mask="0xffffffff" />
+		<node id="Count_tbm_ch_11" address="0x40040037" mask="0x0000003f" />
+		<node id="Count_tbm_ch_12" address="0x40040038" mask="0x0000003f" />
+		<node id="Data_tbm_ch_11"  address="0x40040039" mask="0xffffffff" />
+		<node id="Data_tbm_ch_12"  address="0x4004003a" mask="0xffffffff" />
+		<node id="Count_tbm_ch_13" address="0x4004003b" mask="0x0000003f" />
+		<node id="Count_tbm_ch_14" address="0x4004003c" mask="0x0000003f" />
+		<node id="Data_tbm_ch_13"  address="0x4004003d" mask="0xffffffff" />
+		<node id="Data_tbm_ch_14"  address="0x4004003e" mask="0xffffffff" />
+		<node id="Count_tbm_ch_15" address="0x4004003f" mask="0x0000003f" />
+		<node id="Count_tbm_ch_16" address="0x40040040" mask="0x0000003f" />
+		<node id="Data_tbm_ch_15"  address="0x40040041" mask="0xffffffff" />
+		<node id="Data_tbm_ch_16"  address="0x40040042" mask="0xffffffff" />
+	</node>
+	<node id="HeaderID_tbm_ch_1"   address="0x40040003" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_2"   address="0x40040004" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_1"  address="0x40040005" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_2"  address="0x40040006" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_3"   address="0x40040007" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_4"   address="0x40040008" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_3"  address="0x40040009" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_4"  address="0x4004000a" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_5"   address="0x4004000b" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_6"   address="0x4004000c" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_5"  address="0x4004000d" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_6"  address="0x4004000e" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_7"   address="0x4004000f" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_8"   address="0x40040010" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_7"  address="0x40040011" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_8"  address="0x40040012" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_9"   address="0x40040013" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_10"  address="0x40040014" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_9"  address="0x40040015" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_10" address="0x40040016" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_11"  address="0x40040017" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_12"  address="0x40040018" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_11" address="0x40040019" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_12" address="0x4004001a" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_13"  address="0x4004001b" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_14"  address="0x4004001c" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_13" address="0x4004001d" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_14" address="0x4004001e" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_15"  address="0x4004001f" mask="0xffffffff" permission="r"/>
+	<node id="HeaderID_tbm_ch_16"  address="0x40040020" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_15" address="0x40040021" mask="0xffffffff" permission="r"/>
+	<node id="TrailerID_tbm_ch_16" address="0x40040022" mask="0xffffffff" permission="r"/>	
 
-	<node id="ROC_CLK_0" address="0x80000014"/>
-	<node id="PKAM_Reset_0" address="0x80000015"/>
-        <node id="PKAM_Enable_0" address="0x80000016"/>
-        <node id="Marker_Error_0" address="0x80000017"/>
-        <node id="Marker_Error_CHB_0" address="0x80000018"/>	
-	<node id="ROC_Number_0" address="0x80000019"/>
-	<node id="pix_emul_3_0" address="0x8000001a"/>
-        <node id="pix_emul_4_0" address="0x8000001b"/>
-        <node id="CHA_ROC0_0" address="0x8000001c"/>
-        <node id="CHB_ROC0_0" address="0x8000001d"/>
-	<node id="CHA_ROC1_0" address="0x8000001e"/>
-        <node id="CHB_ROC1_0" address="0x8000001f"/>
-        <node id="CHA_ROC2_0" address="0x80000020"/>
-        <node id="CHB_ROC2_0" address="0x80000021"/>
-	<node id="CHA_ROC3_0" address="0x80000022"/>
-        <node id="CHB_ROC3_0" address="0x80000023"/>
-        <node id="CHA_ROC4_0" address="0x80000024"/>
-        <node id="CHB_ROC4_0" address="0x80000025"/>
-	<node id="CHA_ROC5_0" address="0x80000026"/>
-	<node id="CHB_ROC5_0" address="0x80000027"/>
-	<node id="CHA_ROC6_0" address="0x80000028"/>
-	<node id="CHB_ROC6_0" address="0x80000029"/>
-	<node id="CHA_ROC7_0" address="0x8000002a"/>
-	<node id="CHB_ROC7_0" address="0x8000002b"/>
-	<node id="CHA_Hits_0" address="0x8000002c"/>
-	<node id="CHB_Hits_0" address="0x8000002d"/>
-	<!--node id="Stack_Data_Out_chA" address="0x8000002a"/-->
-	<!--node id="stack_Data_Out_chB" address="0x8000002b"/-->
+	<node id="TBMHeaderError" permission="r" >
+		<node id="tbm_ch_1" address="0x40040043" />
+		<node id="tbm_ch_2" address="0x40040044" />
+		<node id="tbm_ch_3" address="0x40040045" />
+		<node id="tbm_ch_4" address="0x40040046" />
+		<node id="tbm_ch_5" address="0x40040047" />
+		<node id="tbm_ch_6" address="0x40040048" />
+		<node id="tbm_ch_7" address="0x40040049" />
+		<node id="tbm_ch_8" address="0x4004004a" />
+		<node id="tbm_ch_9" address="0x4004004b" />
+		<node id="tbm_ch_10" address="0x4004004c" />
+		<node id="tbm_ch_11" address="0x4004004d" />
+		<node id="tbm_ch_12" address="0x4004004e" />
+		<node id="tbm_ch_13" address="0x4004004f" />
+		<node id="tbm_ch_14" address="0x40040050" />
+		<node id="tbm_ch_15" address="0x40040051" />
+		<node id="tbm_ch_16" address="0x40040052" />
+	</node>
 
-	<node id="ROC_CLK_1" address="0x8000002e"/>
-	<node id="PKAM_Reset_1" address="0x8000002f"/>
-        <node id="PKAM_Enable_1" address="0x80000030"/>
-        <node id="Marker_Error_1" address="0x80000031"/>
-        <node id="Marker_Error_CHB_1" address="0x80000032"/> 
-	<node id="ROC_Number_1" address="0x80000033"/>
-	<node id="pix_emul_3_1" address="0x80000034"/>
-        <node id="pix_emul_4_1" address="0x80000035"/>
-        <node id="CHA_ROC0_1" address="0x80000036"/>
-        <node id="CHB_ROC0_1" address="0x80000037"/>
-	<node id="CHA_ROC1_1" address="0x80000038"/>
-        <node id="CHB_ROC1_1" address="0x80000039"/>
-        <node id="CHA_ROC2_1" address="0x8000003a"/>
-        <node id="CHB_ROC2_1" address="0x8000003b"/>
-	<node id="CHA_ROC3_1" address="0x8000003c"/>
-        <node id="CHB_ROC3_1" address="0x8000003d"/>
-        <node id="CHA_ROC4_1" address="0x8000003e"/>
-        <node id="CHB_ROC4_1" address="0x8000003f"/>
-	<node id="CHA_ROC5_1" address="0x80000040"/>
-	<node id="CHB_ROC5_1" address="0x80000041"/>
-	<node id="CHA_ROC6_1" address="0x80000042"/>
-	<node id="CHB_ROC6_1" address="0x80000043"/>
-	<node id="CHA_ROC7_1" address="0x80000044"/>
-	<node id="CHB_ROC7_1" address="0x80000045"/>
-	<node id="CHA_Hits_1" address="0x80000046"/>
-	<node id="CHB_Hits_1" address="0x80000047"/>
+	<node id="TBMTrailerError" permission="r" >
+		<node id="tbm_ch_1" address="0x40040053" />
+		<node id="tbm_ch_2" address="0x40040054" />
+		<node id="tbm_ch_3" address="0x40040055" />
+		<node id="tbm_ch_4" address="0x40040056" />
+		<node id="tbm_ch_5" address="0x40040057" />
+		<node id="tbm_ch_6" address="0x40040058" />
+		<node id="tbm_ch_7" address="0x40040059" />
+		<node id="tbm_ch_8" address="0x4004005a" />
+		<node id="tbm_ch_9" address="0x4004005b" />
+		<node id="tbm_ch_10" address="0x4004005c" />
+		<node id="tbm_ch_11" address="0x4004005d" />
+		<node id="tbm_ch_12" address="0x4004005e" />
+		<node id="tbm_ch_13" address="0x4004005f" />
+		<node id="tbm_ch_14" address="0x40040060" />
+		<node id="tbm_ch_15" address="0x40040061" />
+		<node id="tbm_ch_16" address="0x40040062" />
+	</node>
+	
+	<node id="ROCHeaderError" permission="r" >
+		<node id="tbm_ch_1" address="0x40040063" />
+		<node id="tbm_ch_2" address="0x40040064" />
+		<node id="tbm_ch_3" address="0x40040065" />
+		<node id="tbm_ch_4" address="0x40040066" />
+		<node id="tbm_ch_5" address="0x40040067" />
+		<node id="tbm_ch_6" address="0x40040068" />
+		<node id="tbm_ch_7" address="0x40040069" />
+		<node id="tbm_ch_8" address="0x4004006a" />
+		<node id="tbm_ch_9" address="0x4004006b" />
+		<node id="tbm_ch_10" address="0x4004006c" />
+		<node id="tbm_ch_11" address="0x4004006d" />
+		<node id="tbm_ch_12" address="0x4004006e" />
+		<node id="tbm_ch_13" address="0x4004006f" />
+		<node id="tbm_ch_14" address="0x40040070" />
+		<node id="tbm_ch_15" address="0x40040071" />
+		<node id="tbm_ch_16" address="0x40040072" />
+	</node>
 
-	<node id="ROC_CLK_2" address="0x80000048"/>
-	<node id="PKAM_Reset_2" address="0x80000049"/>
-        <node id="PKAM_Enable_2" address="0x8000004a"/>
-        <node id="Marker_Error_2" address="0x8000004b"/>
-        <node id="Marker_Error_CHB_2" address="0x8000004c"/> 
-	<node id="ROC_Number_2" address="0x8000004d"/>
-	<node id="pix_emul_3_2" address="0x8000004e"/>
-        <node id="pix_emul_4_2" address="0x8000004f"/>
-        <node id="CHA_ROC0_2" address="0x80000050"/>
-        <node id="CHB_ROC0_2" address="0x80000051"/>
-	<node id="CHA_ROC1_2" address="0x80000052"/>
-        <node id="CHB_ROC1_2" address="0x80000053"/>
-        <node id="CHA_ROC2_2" address="0x80000054"/>
-        <node id="CHB_ROC2_2" address="0x80000055"/>
-	<node id="CHA_ROC3_2" address="0x80000056"/>
-        <node id="CHB_ROC3_2" address="0x80000057"/>
-        <node id="CHA_ROC4_2" address="0x80000058"/>
-        <node id="CHB_ROC4_2" address="0x80000059"/>
-	<node id="CHA_ROC5_2" address="0x8000005a"/>
-	<node id="CHB_ROC5_2" address="0x8000005b"/>
-	<node id="CHA_ROC6_2" address="0x8000005c"/>
-	<node id="CHB_ROC6_2" address="0x8000005d"/>
-	<node id="CHA_ROC7_2" address="0x8000005e"/>
-	<node id="CHB_ROC7_2" address="0x8000005f"/>
-	<node id="CHA_Hits_2" address="0x80000060"/>
-	<node id="CHB_Hits_2" address="0x80000061"/>
+	<node id="Marker_dump_1" address="0x80000032" />
+	<node id="Marker_dump_2" address="0x80000033" />
+	<node id="Marker_dump_3" address="0x80000034" />
 
-	<node id="ROC_CLK_3" address="0x80000062"/>
-	<node id="PKAM_Reset_3" address="0x80000063"/>
-        <node id="PKAM_Enable_3" address="0x80000064"/>
-        <node id="Marker_Error_3" address="0x80000065"/>
-        <node id="Marker_Error_CHB_3" address="0x80000066"/> 
-	<node id="ROC_Number_3" address="0x80000067"/>
-	<node id="pix_emul_3_3" address="0x80000068"/>
-        <node id="pix_emul_4_3" address="0x80000069"/>
-        <node id="CHA_ROC0_3" address="0x8000006a"/>
-        <node id="CHB_ROC0_3" address="0x8000006b"/>
-	<node id="CHA_ROC1_3" address="0x8000006c"/>
-        <node id="CHB_ROC1_3" address="0x8000006d"/>
-        <node id="CHA_ROC2_3" address="0x8000006e"/>
-        <node id="CHB_ROC2_3" address="0x8000006f"/>
-	<node id="CHA_ROC3_3" address="0x80000070"/>
-        <node id="CHB_ROC3_3" address="0x80000071"/>
-        <node id="CHA_ROC4_3" address="0x80000072"/>
-        <node id="CHB_ROC4_3" address="0x80000073"/>
-	<node id="CHA_ROC5_3" address="0x80000074"/>
-	<node id="CHB_ROC5_3" address="0x80000075"/>
-	<node id="CHA_ROC6_3" address="0x80000076"/>
-	<node id="CHB_ROC6_3" address="0x80000077"/>
-	<node id="CHA_ROC7_3" address="0x80000078"/>
-	<node id="CHB_ROC7_3" address="0x80000079"/>
-	<node id="CHA_Hits_3" address="0x8000007a"/>
-	<node id="CHB_Hits_3" address="0x8000007b"/>
+	<node id="Fiber_0" address="0x80000014" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
 
-	<node id="ROC_CLK_4" address="0x8000007c"/>
-	<node id="PKAM_Reset_4" address="0x8000007d"/>
-        <node id="PKAM_Enable_4" address="0x8000007e"/>
-        <node id="Marker_Error_4" address="0x8000007f"/>
-        <node id="Marker_Error_CHB_4" address="0x80000080"/> 
-	<node id="ROC_Number_4" address="0x80000081"/>
-	<node id="pix_emul_3_4" address="0x80000082"/>
-        <node id="pix_emul_4_4" address="0x80000083"/>
-        <node id="CHA_ROC0_4" address="0x80000084"/>
-        <node id="CHB_ROC0_4" address="0x80000085"/>
-	<node id="CHA_ROC1_4" address="0x80000086"/>
-        <node id="CHB_ROC1_4" address="0x80000087"/>
-        <node id="CHA_ROC2_4" address="0x80000088"/>
-        <node id="CHB_ROC2_4" address="0x80000089"/>
-	<node id="CHA_ROC3_4" address="0x8000008a"/>
-        <node id="CHB_ROC3_4" address="0x8000008b"/>
-        <node id="CHA_ROC4_4" address="0x8000008c"/>
-        <node id="CHB_ROC4_4" address="0x8000008d"/>
-	<node id="CHA_ROC5_4" address="0x8000008e"/>
-	<node id="CHB_ROC5_4" address="0x8000008f"/>
-	<node id="CHA_ROC6_4" address="0x80000090"/>
-	<node id="CHB_ROC6_4" address="0x80000091"/>
-	<node id="CHA_ROC7_4" address="0x80000092"/>
-	<node id="CHB_ROC7_4" address="0x80000093"/>
-	<node id="CHA_Hits_4" address="0x80000094"/>
-	<node id="CHB_Hits_4" address="0x80000095"/>
+	<node id="Fiber_1" address="0x80000035" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
 
-	<node id="ROC_CLK_5" address="0x80000096"/>
-	<node id="PKAM_Reset_5" address="0x80000097"/>
-        <node id="PKAM_Enable_5" address="0x80000098"/>
-        <node id="Marker_Error_5" address="0x80000099"/>
-        <node id="Marker_Error_CHB_5" address="0x8000009a"/> 
-	<node id="ROC_Number_5" address="0x8000009b"/>
-	<node id="pix_emul_3_5" address="0x8000009c"/>
-        <node id="pix_emul_4_5" address="0x8000009d"/>
-        <node id="CHA_ROC0_5" address="0x8000009e"/>
-        <node id="CHB_ROC0_5" address="0x8000009f"/>
-	<node id="CHA_ROC1_5" address="0x800000a0"/>
-        <node id="CHB_ROC1_5" address="0x800000a1"/>
-        <node id="CHA_ROC2_5" address="0x800000a2"/>
-        <node id="CHB_ROC2_5" address="0x800000a3"/>
-	<node id="CHA_ROC3_5" address="0x800000a4"/>
-        <node id="CHB_ROC3_5" address="0x800000a5"/>
-        <node id="CHA_ROC4_5" address="0x800000a6"/>
-        <node id="CHB_ROC4_5" address="0x800000a7"/>
-	<node id="CHA_ROC5_5" address="0x800000a8"/>
-	<node id="CHB_ROC5_5" address="0x800000a9"/>
-	<node id="CHA_ROC6_5" address="0x800000aa"/>
-	<node id="CHB_ROC6_5" address="0x800000ab"/>
-	<node id="CHA_ROC7_5" address="0x800000ac"/>
-	<node id="CHB_ROC7_5" address="0x800000ad"/>
-	<node id="CHA_Hits_5" address="0x800000ae"/>
-	<node id="CHB_Hits_5" address="0x800000af"/>
+	<node id="Fiber_2" address="0x80000056" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
 
-	<node id="ROC_CLK_6" address="0x800000b0"/>
-	<node id="PKAM_Reset_6" address="0x800000b1"/>
-        <node id="PKAM_Enable_6" address="0x800000b2"/>
-        <node id="Marker_Error_6" address="0x800000b3"/>
-        <node id="Marker_Error_CHB_6" address="0x800000b4"/> 
-	<node id="ROC_Number_6" address="0x800000b5"/>
-	<node id="pix_emul_3_6" address="0x800000b6"/>
-        <node id="pix_emul_4_6" address="0x800000b7"/>
-        <node id="CHA_ROC0_6" address="0x800000b8"/>
-        <node id="CHB_ROC0_6" address="0x800000b9"/>
-	<node id="CHA_ROC1_6" address="0x800000ba"/>
-        <node id="CHB_ROC1_6" address="0x800000bb"/>
-        <node id="CHA_ROC2_6" address="0x800000bc"/>
-        <node id="CHB_ROC2_6" address="0x800000bd"/>
-	<node id="CHA_ROC3_6" address="0x800000be"/>
-        <node id="CHB_ROC3_6" address="0x800000bf"/>
-        <node id="CHA_ROC4_6" address="0x800000c0"/>
-        <node id="CHB_ROC4_6" address="0x800000c1"/>
-	<node id="CHA_ROC5_6" address="0x800000c2"/>
-	<node id="CHB_ROC5_6" address="0x800000c3"/>
-	<node id="CHA_ROC6_6" address="0x800000c4"/>
-	<node id="CHB_ROC6_6" address="0x800000c5"/>
-	<node id="CHA_ROC7_6" address="0x800000c6"/>
-	<node id="CHB_ROC7_6" address="0x800000c7"/>
-	<node id="CHA_Hits_6" address="0x800000c8"/>
-	<node id="CHB_Hits_6" address="0x800000c9"/>
+	<node id="Fiber_3" address="0x80000077" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
 
-	<node id="ROC_CLK_7" address="0x800000ca"/>
-	<node id="PKAM_Reset_7" address="0x800000cb"/>
-        <node id="PKAM_Enable_7" address="0x800000cc"/>
-        <node id="Marker_Error_7" address="0x800000cd"/>
-        <node id="Marker_Error_CHB_7" address="0x800000ce"/> 
-	<node id="ROC_Number_7" address="0x800000cf"/>
-	<node id="pix_emul_3_7" address="0x800000d0"/>
-        <node id="pix_emul_4_7" address="0x800000d1"/>
-        <node id="CHA_ROC0_7" address="0x800000d2"/>
-        <node id="CHB_ROC0_7" address="0x800000d3"/>
-	<node id="CHA_ROC1_7" address="0x800000d4"/>
-        <node id="CHB_ROC1_7" address="0x800000d5"/>
-        <node id="CHA_ROC2_7" address="0x800000d6"/>
-        <node id="CHB_ROC2_7" address="0x800000d7"/>
-	<node id="CHA_ROC3_7" address="0x800000d8"/>
-        <node id="CHB_ROC3_7" address="0x800000d9"/>
-        <node id="CHA_ROC4_7" address="0x800000da"/>
-        <node id="CHB_ROC4_7" address="0x800000db"/>
-	<node id="CHA_ROC5_7" address="0x800000dc"/>
-	<node id="CHB_ROC5_7" address="0x800000dd"/>
-	<node id="CHA_ROC6_7" address="0x800000de"/>
-	<node id="CHB_ROC6_7" address="0x800000df"/>
-	<node id="CHA_ROC7_7" address="0x800000e0"/>
-	<node id="CHB_ROC7_7" address="0x800000e1"/>
-	<node id="CHA_Hits_7" address="0x800000e2"/>
-	<node id="CHB_Hits_7" address="0x800000e3"/>
+	<node id="Fiber_4" address="0x80000098" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
+
+	<node id="Fiber_5" address="0x800000B9" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
+
+	<node id="Fiber_6" address="0x800000DA" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
+
+	<node id="Fiber_7" address="0x800000FB" >
+		<node id="ROC_CLK" address="0x0">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+        <node id="PKAM_Enable" address="0x0" mask="0x00030000"/>
+		<node id="Marker_Error_ROC_Count_chA" address="0x0" mask="0x003C0000" />
+		<node id="PKAM_Reset" address="0x1">
+			<node id="chA" mask="0x000000ff" />
+			<node id="chB" mask="0x0000ff00" />
+		</node>
+		<node id="PKAM_Constant" address="0x1">
+			<node id="chA" mask="0x00ff0000" />
+			<node id="chB" mask="0xff000000" />
+		</node>
+        <node id="Marker_Error" address="0x2">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x03000000" />
+			<node id="chB_Type"  mask="0x0C000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock" address="0x3" />
+		<node id="Marker_Error_chB_Clock" address="0x4" />
+		<node id="Marker_Error_ROC_Count_chB" address="0x2" mask="0xF0000000" />
+        <node id="Marker_Error_Custom" address="0x5">
+			<node id="chA_Value" mask="0x00000fff" />
+			<node id="chB_Value" mask="0x00fff000" />
+			<node id="chA_Type"  mask="0x01000000" />
+			<node id="chB_Type"  mask="0x02000000" />
+		</node>
+		<node id="Marker_Error_chA_Clock_Custom" address="0x6" />
+		<node id="Marker_Error_chB_Clock_Custom" address="0x7" />
+		<node id="Marker_Error_chA_Clock_Custom_Idle" address="0x8" />
+		<node id="Marker_Error_chB_Clock_Custom_Idle" address="0x9" />
+		<node id="ROC_Number" address="0xa"/>
+		<node id="Header_Flag_A" address="0xb"/>
+        <node id="Header_Flag_B" address="0xc"/>
+        <node id="CHA_ROC0" address="0xd"/>
+        <node id="CHB_ROC0" address="0xe"/>
+		<node id="CHA_ROC1" address="0xf"/>
+        <node id="CHB_ROC1" address="0x10"/>
+        <node id="CHA_ROC2" address="0x11"/>
+        <node id="CHB_ROC2" address="0x12"/>
+		<node id="CHA_ROC3" address="0x13"/>
+        <node id="CHB_ROC3" address="0x14"/>
+        <node id="CHA_ROC4" address="0x15"/>
+        <node id="CHB_ROC4" address="0x16"/>
+		<node id="CHA_ROC5" address="0x17"/>
+		<node id="CHB_ROC5" address="0x18"/>
+		<node id="CHA_ROC6" address="0x19"/>
+		<node id="CHB_ROC6" address="0x1a"/>
+		<node id="CHA_ROC7" address="0x1b"/>
+		<node id="CHB_ROC7" address="0x1c"/>
+		<node id="CHA_Hits_1" address="0x1d"/>
+		<node id="CHA_Hits_2" address="0x1e"/>
+		<node id="CHB_Hits_1" address="0x1f"/>
+		<node id="CHB_Hits_2" address="0x20"/>
+	</node>
+
+
 </node>	
