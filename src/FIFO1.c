@@ -12,6 +12,35 @@
 #include "TLatex.h"
 #include "Error_FIFO.c"
 
+void CMSPreliminary( TCanvas * Canvas){
+                TString cmsText = "CMS";
+                int cmsTextFont = 61;
+                float cmsTextSize = 0.75;
+                TString extraText = "pixel preliminary";
+                int extraTextFont = 52;
+                float extraOverCmsTextSize  = 0.76;
+                float extraTextSize = extraOverCmsTextSize*cmsTextSize;
+                float H = Canvas->GetWh();
+                float W = Canvas->GetWw();
+                float l = Canvas->GetLeftMargin();
+                float t = Canvas->GetTopMargin();
+                float r = Canvas->GetRightMargin();
+                float b = Canvas->GetBottomMargin();
+                float relExtraDY = 2;
+                float align_ = 23.0;
+                float posX_ = 3;
+                float posY_ = 177.5;
+                TLatex latex;
+                latex.SetTextFont(cmsTextFont);
+                latex.SetTextSize(cmsTextSize*t);
+                latex.SetTextAlign(align_);
+                latex.DrawLatex(posX_, posY_, cmsText);
+                latex.SetTextFont(extraTextFont);
+                latex.SetTextAlign(align_);
+                latex.SetTextSize(extraTextSize*t);
+                latex.DrawLatex(posX_+3, posY_- 10, extraText);
+}
+
 //Used to plot the pixel alive output and determine if each pixel got 1 hit
 void Pixel_Alive_Plots(vector<vector<unsigned int>>& DCOL, vector<vector<unsigned int>>& PXL, vector<vector<unsigned int>>& Column, vector<vector<unsigned int>>& Row, vector<vector<unsigned int>>& Spy_Col, vector<vector<unsigned int>>& Spy_Row, vector<vector<unsigned int>>& DDR_Col, vector<vector<unsigned int>>& DDR_PXL, int MaxChannel, int fw_major, int fw_minor, int SRAM){
 
@@ -164,34 +193,7 @@ void Pixel_Alive_Plots(vector<vector<unsigned int>>& DCOL, vector<vector<unsigne
 			h4[j*8 + i]->SetMaximum(max);
 			h4[j*8 + i]->Write();
             
-            if(i == 3){
-                TString cmsText = "CMS";
-                int cmsTextFont = 61;
-                float cmsTextSize = 0.75;
-                TString extraText = "pixel preliminary";
-                int extraTextFont = 52;
-                float extraOverCmsTextSize  = 0.76;
-                float extraTextSize = extraOverCmsTextSize*cmsTextSize;
-                float H = AllDDR->GetWh();
-                float W = AllDDR->GetWw();
-                float l = AllDDR->GetLeftMargin();
-                float t = AllDDR->GetTopMargin();
-                float r = AllDDR->GetRightMargin();
-                float b = AllDDR->GetBottomMargin();
-                float relExtraDY = 2;
-                float align_ = 23.0;
-                float posX_ = 3;
-                float posY_ = 177.5;
-                TLatex latex;
-                latex.SetTextFont(cmsTextFont);
-                latex.SetTextSize(cmsTextSize*t);
-                latex.SetTextAlign(align_);
-                latex.DrawLatex(posX_, posY_, cmsText);
-                latex.SetTextFont(extraTextFont);
-                latex.SetTextAlign(align_);
-                latex.SetTextSize(extraTextSize*t);
-                latex.DrawLatex(posX_+3, posY_- 10, extraText);
-    	    }	
+            if(i == 3) CMSPreliminary( AllDDR );
 		
         }
 		AllDDR->Print(outputDir + "/" + AllDDRName + TString(".pdf"));	
@@ -271,34 +273,7 @@ void Hits_Plots(vector<vector<unsigned int>>& Hits, int MaxChannel, int MaxEvent
         sprintf(glib2, "h5_%d", i + 8*11);
         sprintf(glib3, "h5_%d", i + 8*17);
 
-        if(i == 3){
-            TString cmsText = "CMS";
-            int cmsTextFont = 61;
-            float cmsTextSize = 0.75;
-            TString extraText = "pixel preliminary";
-            int extraTextFont = 52;
-            float extraOverCmsTextSize  = 0.76;
-            float extraTextSize = extraOverCmsTextSize*cmsTextSize;
-            float H = AllDDR->GetWh();
-            float W = AllDDR->GetWw();
-            float l = AllDDR->GetLeftMargin();
-            float t = AllDDR->GetTopMargin();
-            float r = AllDDR->GetRightMargin();
-            float b = AllDDR->GetBottomMargin();
-            float relExtraDY = 2;
-            float align_ = 23.0;
-            float posX_ = 20.0;
-            float posY_ = max*0.8;
-            TLatex latex;
-            latex.SetTextFont(cmsTextFont);
-            latex.SetTextSize(cmsTextSize*t);
-            latex.SetTextAlign(align_);
-            latex.DrawLatex(posX_, posY_, cmsText);
-            latex.SetTextFont(extraTextFont);
-            latex.SetTextAlign(align_);
-            latex.SetTextSize(extraTextSize*t);
-            latex.DrawLatex(posX_+7, posY_- max*0.06, extraText);
-    	}	
+        if(i == 3) CMSPreliminary( AllDDR );
 
         auto legend = new TLegend(0.6,0.75,0.75,0.9);
         legend->AddEntry(glib1, "GLIB 1", "l");
@@ -326,20 +301,21 @@ void Hits_Plots_All(vector<vector<unsigned int>>& Hits, int MaxChannel, int MaxE
 
 	TH1F *h_all[384];	
 	TCanvas *AllDDR;
+	TCanvas *AllHits;
 
 	char *h_allname = new char[384];
 	char* Hitsname = new char[384];
-        char* HitsTitle = new char[48];
+    char* HitsTitle = new char[48];
 
-        int j = 0;
+    int j = 0;
 	for(int i = 0; i < 384; i++){
 		
 		sprintf(h_allname, "h_all_%d",i);
 		if(i % 8 == 0) j++;
 		sprintf(Hitsname, "Hits in ROC %d CH %i", i % 8 + 1, j);
 
-		if(i % 8 <= 3) h_all[i] = new TH1F(h_allname,Hitsname,41,-0.5,40.5);
-                else           h_all[i] = new TH1F(h_allname,"",41,-0.5,40.5);
+		if(i % 8 <= 3) h_all[i] = new TH1F(h_allname,Hitsname,16,-0.5,15.5);
+        else           h_all[i] = new TH1F(h_allname,"",16,-0.5,15.5);
 		h_all[i]->SetDirectory(fout);
 		h_all[i]->GetXaxis()->SetTitle("Hits");
 	}
@@ -353,77 +329,96 @@ void Hits_Plots_All(vector<vector<unsigned int>>& Hits, int MaxChannel, int MaxE
 
 	AllDDR = new TCanvas("Hits Total","Hits all ROCs",200,10,700,500);
 	gStyle->SetPadBorderMode(0);
-        gStyle->SetFrameBorderMode(0);
-        float small = 1e-5;
-        AllDDR->Divide(4,2,small,small);
+    gStyle->SetFrameBorderMode(0);
+    float small = 1e-5;
+    AllDDR->Divide(4,2,small,small);
 	string AllDDRName = "Hits_all_ROCs_v" + fw_major_str + "_" + fw_minor_str;
 	if(SRAM) AllDDRName += "_SRAM";
 	AllDDR->Print(outputDir + "/" + AllDDRName + TString(".pdf["));	
     for(int j = 0; j < MaxChannel; j++){
-	int max0 = h_all[j*8 + 0]->GetMaximum();
-	int max1 = h_all[j*8 + 1]->GetMaximum();
-	int max2 = h_all[j*8 + 2]->GetMaximum();
-	int max3 = h_all[j*8 + 3]->GetMaximum();
-	int max4 = h_all[j*8 + 4]->GetMaximum();
-	int max5 = h_all[j*8 + 5]->GetMaximum();
-	int max6 = h_all[j*8 + 6]->GetMaximum();
-	int max7 = h_all[j*8 + 7]->GetMaximum();
+	    int max0 = h_all[j*8 + 0]->GetMaximum();
+	    int max1 = h_all[j*8 + 1]->GetMaximum();
+	    int max2 = h_all[j*8 + 2]->GetMaximum();
+	    int max3 = h_all[j*8 + 3]->GetMaximum();
+	    int max4 = h_all[j*8 + 4]->GetMaximum();
+	    int max5 = h_all[j*8 + 5]->GetMaximum();
+	    int max6 = h_all[j*8 + 6]->GetMaximum();
+	    int max7 = h_all[j*8 + 7]->GetMaximum();
         int max = std::max(std::max(std::max(max0, max1), std::max(max2, max3)), std::max(std::max(max4, max5),std::max(max6, max7)));
 
         for(int i = 0; i < 8; i++){
-		AllDDR->cd((i % 8) + 1);
-		if((i % 8) <= 3){
-                    gPad->SetBottomMargin(small);
-                    if((i % 4) < 3) gPad->SetRightMargin(small);
-                    if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
-		}
-		else{
-		    gPad->SetTopMargin(small);
-		    if((i % 4) < 3) gPad->SetRightMargin(small);
-		    if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
-		    gPad->SetTickx();
-		
-		}
+		    AllDDR->cd((i % 8) + 1);
+		    if((i % 8) <= 3){
+                gPad->SetBottomMargin(small);
+                if((i % 4) < 3) gPad->SetRightMargin(small);
+                if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
+		    }
+		    else{
+		        gPad->SetTopMargin(small);
+		        if((i % 4) < 3) gPad->SetRightMargin(small);
+		        if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
+		        gPad->SetTickx();
+		    
+		    }
 
-	h_all[j*8 + i]->Draw();
-	h_all[j*8 + i]->SetLineColor(kRed);
-	h_all[j*8 + i]->SetMaximum(1.1*max);
-	h_all[j*8 + i]->Write();
-	gStyle->SetOptStat(1111);
+	        h_all[j*8 + i]->Draw();
+	        h_all[j*8 + i]->SetLineColor(kRed);
+	        h_all[j*8 + i]->SetMaximum(1.1*max);
+	        h_all[j*8 + i]->Write();
+	        gStyle->SetOptStat(1111);
 
-        if(i == 3){
-            TString cmsText = "CMS";
-            int cmsTextFont = 61;
-            float cmsTextSize = 0.75;
-            TString extraText = "pixel preliminary";
-            int extraTextFont = 52;
-            float extraOverCmsTextSize  = 0.76;
-            float extraTextSize = extraOverCmsTextSize*cmsTextSize;
-            float H = AllDDR->GetWh();
-            float W = AllDDR->GetWw();
-            float l = AllDDR->GetLeftMargin();
-            float t = AllDDR->GetTopMargin();
-            float r = AllDDR->GetRightMargin();
-            float b = AllDDR->GetBottomMargin();
-            float relExtraDY = 2;
-            float align_ = 23.0;
-            float posX_ = 20.0;
-            float posY_ = max*0.8;
-            TLatex latex;
-            latex.SetTextFont(cmsTextFont);
-            latex.SetTextSize(cmsTextSize*t);
-            latex.SetTextAlign(align_);
-            latex.DrawLatex(posX_, posY_, cmsText);
-            latex.SetTextFont(extraTextFont);
-            latex.SetTextAlign(align_);
-            latex.SetTextSize(extraTextSize*t);
-            latex.DrawLatex(posX_+7, posY_- max*0.06, extraText);
-    	}	
+            if(i == 3) CMSPreliminary(AllDDR);
 
-    }
-	AllDDR->Print(outputDir + "/" + AllDDRName + TString(".pdf"));
+        }
+        AllDDR->Print(outputDir + "/" + AllDDRName + TString(".pdf"));
     }
     AllDDR->Print(outputDir + "/" + AllDDRName + TString(".pdf]"));
+
+    //Adding part to plot all hits on the same plot
+    AllHits = new TCanvas("Hits Total","Hits all ROCs",200,10,700,500);
+	gStyle->SetPadBorderMode(0);
+    gStyle->SetFrameBorderMode(0);
+    AllHits->Divide(4,2,small,small);
+    
+    int max = 0;
+    for(int k = 0; k < 8*MaxChannel; k++){
+        int max0 = h_all[k]->GetMaximum();
+        max = std::max(max0, max);
+    }
+
+    for(int j = 0; j < MaxChannel; j++){
+        for(int i = 0; i < 8; i++){
+		    AllHits->cd((i % 8) + 1);
+		    if((i % 8) <= 3){
+                gPad->SetBottomMargin(small);
+                if((i % 4) < 3) gPad->SetRightMargin(small);
+                if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
+		    }
+		    else{
+		        gPad->SetTopMargin(small);
+		        if((i % 4) < 3) gPad->SetRightMargin(small);
+		        if((i % 4) > 0 && (i % 4) <= 3) gPad->SetLeftMargin(small);
+		        gPad->SetTickx();
+		    
+		    }
+
+            //gStyle->SetPalette(61);
+	        if(j == 0) h_all[j*8 + i]->Draw();
+            else       h_all[j*8 + i]->Draw("same");
+	        h_all[j*8 + i]->SetLineColor(kRed);
+            h_all[j*8 + i]->SetMaximum(1.1*max);
+	        h_all[j*8 + i]->Write();
+	        //gStyle->SetOptStat(1111);
+
+            //if(i == 3) CMSPreliminary(AllHits);
+        }
+    }
+    
+    TString HitsRocs = "Hits_Same_plot_v" + fw_major_str + "_" + fw_minor_str;
+	if(SRAM) HitsRocs += "_SRAM";
+    HitsRocs += ".pdf";
+	AllHits->SaveAs(outputDir + "/" + HitsRocs);	
+    
 }
 
 void PKAM_Plots(vector<unsigned int>& PKAM, int MaxEventNum, int fw_major, int fw_minor, int SRAM){

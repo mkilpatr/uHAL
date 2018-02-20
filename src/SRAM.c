@@ -335,6 +335,8 @@ void SRAM2_Write_board1(int GLIB, vector<float>& Distribution, int partition){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    if(partition == 16) partition = 15;
+
     hw.getNode("SRAM_partition").write(partition);
 
     int divide = 0;
@@ -411,6 +413,8 @@ void SRAM2_Write_board2(int GLIB, vector<float>& Distribution, int partition){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    if(partition == 16) partition = 15;
+    
     hw.getNode("SRAM_partition").write(partition);
 
     int divide = 0;
@@ -487,6 +491,8 @@ void SRAM2_Write_board3(int GLIB, vector<float>& Distribution, int partition){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    if(partition == 16) partition = 15;
+    
     hw.getNode("SRAM_partition").write(partition);
 
     int divide = 0;
