@@ -73,6 +73,25 @@ void Clear_SRAM_FIFO(){
 	hw3.dispatch();	
 }
 
+void Partition_Mode( int Partition ){
+	using namespace uhal;
+    disableLogging();
+	ConnectionManager manager ("file://settings/GLIB_connections.xml");
+	HwInterface hw=manager.getDevice ("GLIB.crate.slot_9");
+	HwInterface hw2=manager.getDevice ("GLIB.crate.slot_10");
+	HwInterface hw3=manager.getDevice ("GLIB.crate.slot_11");
+
+    hw.getNode("SRAM_partition").write(Partition);
+    hw.dispatch();
+
+    hw2.getNode("SRAM_partition").write(Partition);
+    hw2.dispatch();
+
+    hw3.getNode("SRAM_partition").write(Partition);
+    hw3.dispatch();
+
+}
+
 void SRAM1_Write_board1(int GLIB){
     using namespace uhal;
     disableLogging();
@@ -282,9 +301,52 @@ void SRAM2_Write_board1(int GLIB, float Distribution){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    hw.getNode("SRAM_partition").write(0);
+
     for(uint32_t i = 0; i < 0x1FFFFF; i++){
 		for(int j = 0; j < 8; j++){
 			hit[j] = gRandom->Poisson(Distribution);
+			Hits.push_back(hit[j]);
+		}
+		
+		if(GLIB == 0) WriteData.push_back(hit[0] << 28 | hit[1] << 24 | hit[2] << 20 | hit[3] << 16 | hit[4] << 12 | hit[5] << 8 | hit[6] << 4 | hit[7]);
+		if(GLIB == 1) WriteData.push_back(hit[0] << 24 | hit[1] << 16 | hit[2] << 8 | hit[3]);
+		if(GLIB == 2) WriteData.push_back(hit[0] << 16 | hit[1]);
+		if( i % 0x10000 == 0) std::cout << "SRAM2_addr: " << std::hex << i << " write: " << WriteData[i] << std::endl;
+	}
+    hw.getNode("sram2_user_logic").write(0);
+    hw.getNode("flash_select").write(0);
+    hw.dispatch();
+
+    hw.getNode("SRAM2_block").writeBlock(WriteData);
+    hw.dispatch();
+
+	//SRAM_Plots(Hits);
+}
+
+void SRAM2_Write_board1(int GLIB, vector<float>& Distribution, int partition){
+    using namespace uhal;
+    disableLogging();
+    ConnectionManager manager ("file://settings/GLIB_connections.xml");
+    HwInterface hw=manager.getDevice ( "GLIB.crate.slot_9" );
+    ValWord<uint32_t> mem;
+    int hit[8];
+
+	std::vector<unsigned int> Hits;
+	std::vector<unsigned int> WriteData;
+
+    hw.getNode("SRAM_partition").write(partition);
+
+    int divide = 0;
+    if( partition == 15) divide = 16;
+    else divide = partition;
+
+    uint32_t new_dist = 0x1FFFFF / divide;
+    int dist_index = 0;
+        for(uint32_t i = 0; i < 0x1FFFFF; i++){
+		if(i % new_dist == 0) dist_index++;
+		for(int j = 0; j < 8; j++){
+			hit[j] = gRandom->Poisson(Distribution[dist_index - 1]);
 			Hits.push_back(hit[j]);
 		}
 		
@@ -315,9 +377,52 @@ void SRAM2_Write_board2(int GLIB, float Distribution){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    hw.getNode("SRAM_partition").write(0);
+
     for(uint32_t i = 0; i < 0x1FFFFF; i++){
 		for(int j = 0; j < 8; j++){
 			hit[j] = gRandom->Poisson(Distribution);
+			Hits.push_back(hit[j]);
+		}
+		
+		if(GLIB == 0) WriteData.push_back(hit[0] << 28 | hit[1] << 24 | hit[2] << 20 | hit[3] << 16 | hit[4] << 12 | hit[5] << 8 | hit[6] << 4 | hit[7]);
+		if(GLIB == 1) WriteData.push_back(hit[0] << 24 | hit[1] << 16 | hit[2] << 8 | hit[3]);
+		if(GLIB == 2) WriteData.push_back(hit[0] << 16 | hit[1]);
+		if( i % 0x10000 == 0) std::cout << "SRAM2_addr: " << std::hex << i << " write: " << WriteData[i] << std::endl;
+	}
+    hw.getNode("sram2_user_logic").write(0);
+    hw.getNode("flash_select").write(0);
+    hw.dispatch();
+
+    hw.getNode("SRAM2_block").writeBlock(WriteData);
+    hw.dispatch();
+
+	//SRAM_Plots(Hits);
+}
+
+void SRAM2_Write_board2(int GLIB, vector<float>& Distribution, int partition){
+    using namespace uhal;
+    disableLogging();
+    ConnectionManager manager ("file://settings/GLIB_connections.xml");
+    HwInterface hw=manager.getDevice ( "GLIB.crate.slot_10" );
+    ValWord<uint32_t> mem;
+    int hit[8];
+
+	std::vector<unsigned int> Hits;
+	std::vector<unsigned int> WriteData;
+
+    hw.getNode("SRAM_partition").write(partition);
+
+    int divide = 0;
+    if( partition == 15) divide = 16;
+    else divide = partition;
+
+    uint32_t new_dist = 0x1FFFFF / divide;
+    int dist_index = 0;
+        for(uint32_t i = 0; i < 0x1FFFFF; i++){
+		if(i % new_dist == 0) dist_index++;
+		for(int j = 0; j < 8; j++){
+			hit[j] = gRandom->Poisson(Distribution[dist_index - 1]);
 			Hits.push_back(hit[j]);
 		}
 		
@@ -348,6 +453,8 @@ void SRAM2_Write_board3(int GLIB, float Distribution){
 	std::vector<unsigned int> Hits;
 	std::vector<unsigned int> WriteData;
 
+    hw.getNode("SRAM_partition").write(0);
+
     for(uint32_t i = 0; i < 0x1FFFFF; i++){
 		for(int j = 0; j < 8; j++){
 			hit[j] = gRandom->Poisson(Distribution);
@@ -368,4 +475,46 @@ void SRAM2_Write_board3(int GLIB, float Distribution){
 
 	//SRAM_Plots(Hits);
 }
+
+void SRAM2_Write_board3(int GLIB, vector<float>& Distribution, int partition){
+    using namespace uhal;
+    disableLogging();
+    ConnectionManager manager ("file://settings/GLIB_connections.xml");
+    HwInterface hw=manager.getDevice ( "GLIB.crate.slot_11" );
+    ValWord<uint32_t> mem;
+    int hit[8];
+
+	std::vector<unsigned int> Hits;
+	std::vector<unsigned int> WriteData;
+
+    hw.getNode("SRAM_partition").write(partition);
+
+    int divide = 0;
+    if( partition == 15) divide = 16;
+    else divide = partition;
+
+    uint32_t new_dist = 0x1FFFFF / divide;
+    int dist_index = 0;
+        for(uint32_t i = 0; i < 0x1FFFFF; i++){
+		if(i % new_dist == 0) dist_index++;
+		for(int j = 0; j < 8; j++){
+			hit[j] = gRandom->Poisson(Distribution[dist_index - 1]);
+			Hits.push_back(hit[j]);
+		}
+		
+		if(GLIB == 0) WriteData.push_back(hit[0] << 28 | hit[1] << 24 | hit[2] << 20 | hit[3] << 16 | hit[4] << 12 | hit[5] << 8 | hit[6] << 4 | hit[7]);
+		if(GLIB == 1) WriteData.push_back(hit[0] << 24 | hit[1] << 16 | hit[2] << 8 | hit[3]);
+		if(GLIB == 2) WriteData.push_back(hit[0] << 16 | hit[1]);
+		if( i % 0x10000 == 0) std::cout << "SRAM2_addr: " << std::hex << i << " write: " << WriteData[i] << " Dist index: " << dist_index - 1 << std::endl;
+	}
+    hw.getNode("sram2_user_logic").write(0);
+    hw.getNode("flash_select").write(0);
+    hw.dispatch();
+
+    hw.getNode("SRAM2_block").writeBlock(WriteData);
+    hw.dispatch();
+
+	//SRAM_Plots(Hits);
+}
+
 

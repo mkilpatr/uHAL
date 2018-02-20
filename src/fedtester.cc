@@ -319,7 +319,13 @@ try{
     int SRAM;
     if(test_num != 0) cin >> SRAM;
     else SRAM = 0;
-   
+    
+    int Partition;
+    if(SRAM == 1){
+        cout << "Do you want to Partition SRAM?" << endl;
+        cin >> Partition;
+    }
+
     cout << "Do you want to change PKAM value?" << endl;
     int PKAM_change;
     if(test_num != 0) cin >> PKAM_change;
@@ -332,7 +338,10 @@ try{
         PKAM_Enable(PKAM_int/256, PKAM_const);
     }
 
-    if(SRAM == 1) SRAM_Mode();
+    if(SRAM == 1){ 
+        Partition_Mode(Partition);
+        SRAM_Mode();
+    }
     else SRAM_Disable();
     ADCAsEvn(1);
     Test_Hits_Full_FIFO1(1, 0, 0, 0, 0, 0, 1, 0, Num_Hits, SRAM);
@@ -741,9 +750,26 @@ try{
 
   if(test_num == 26){
     current_test = 26;
-	cout << "What poisson distribution?" << endl;
-	float Distribution;
-	cin >> Distribution;
+        cout << "Do you want to partition SRAM Hits?" << endl;
+	int Partition; 
+	cin >> Partition;
+	float Distribution = 0.;
+	vector<float> Distribution_vector;
+	int partitions = 0;
+	if(Partition == 0){
+		cout << "What poisson distribution?" << endl;
+		cin >> Distribution;
+        }
+	else{
+		cout << "How many partitions?" << endl;
+		cin >> partitions;
+		for(int i = 0; i < partitions; i++){
+			cout << "Dist Number " << i << " : " << endl;
+			float distNum;
+			cin >> distNum;
+			Distribution_vector.push_back(distNum);
+		}
+	}
 	//Writing to the SRAM
 	cout << "Do you want to load from text file?" << endl;
     int loadText;
@@ -758,10 +784,12 @@ try{
     }
     else{ 
         SRAM1_Write_board1(GLIB1_version);
-	    SRAM1_Write_board2(GLIB2_version);
-	    SRAM1_Write_board3(GLIB3_version);
+	SRAM1_Write_board2(GLIB2_version);
+	SRAM1_Write_board3(GLIB3_version);
     }
-    //SRAM2_Write_board1(GLIB1_version, 14.25); 3.5625 hit/ROC
+    
+    if(Partition == 0){
+	//SRAM2_Write_board1(GLIB1_version, 14.25); 3.5625 hit/ROC
 	//SRAM2_Write_board2(GLIB2_version, 3.275); 1.6375 hit/ROC
 	//SRAM2_Write_board3(GLIB3_version, 0.77125);
 	//SRAM2_Write_board1(GLIB1_version, 26.3);  //6.575 hit/ROC
@@ -770,6 +798,12 @@ try{
 	SRAM2_Write_board1(GLIB1_version, Distribution);//, PKAM);
 	SRAM2_Write_board2(GLIB2_version, Distribution);//, PKAM);
 	SRAM2_Write_board3(GLIB3_version, Distribution);//, PKAM);
+    }
+    else{
+	SRAM2_Write_board1(GLIB1_version, Distribution_vector, Distribution_vector.size());
+	SRAM2_Write_board2(GLIB2_version, Distribution_vector, Distribution_vector.size());
+	SRAM2_Write_board3(GLIB3_version, Distribution_vector, Distribution_vector.size());
+    }
 	Clear_SRAM_FIFO();
   }
 
@@ -1111,7 +1145,7 @@ try{
     Error_Counters(7, 0, 1);
   }
 
-  if(test_num == 55) FEROL_Data_Throughputs(15, 10);
+  if(test_num == 55) FEROL_Data_Throughputs(15, 8);
 
   if(test_num == 56 || (test_num == 0 && start == 56)){
     current_test = 56;
